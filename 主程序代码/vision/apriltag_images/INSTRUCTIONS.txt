@@ -1,0 +1,30 @@
+# AprilTag Print + Stick Instructions
+
+Generated tags (DICT_4X4_50, 30mm physical size, 300 dpi):
+
+| File                  | ID | Where to stick                |
+|-----------------------|----|-------------------------------|
+| tag_00_30mm.png       | 0  | SHELF, left foot, front face  |
+| tag_01_30mm.png       | 1  | SHELF, middle foot, front face|
+| tag_02_30mm.png       | 2  | SHELF, right foot, front face |
+| tag_10_30mm.png       | 10 | BIN,  front-bottom strip, LEFT  |
+| tag_11_30mm.png       | 11 | BIN,  front-bottom strip, RIGHT |
+
+## Print steps
+
+1. Open each PNG in Word / Preview / Photoshop / browser.
+2. Print at **100% actual size** (do NOT check "fit to page" / "scale to fit").
+3. Use **laser printer + matte sticker paper** (avoid inkjet/glossy).
+4. After printing, measure with calipers: tag black edge should be **30 mm**.
+   Tolerance: ±0.5 mm. If off >1mm, re-check print scale settings.
+
+## Stick steps
+
+1. Cut each tag with the white quiet zone left intact (don't trim into the
+   white border — AprilTag detection needs at least one tag-cell of white margin).
+2. Peel sticker, stick onto **flat clean surface** at the location above.
+3. Tag must face the C920e camera; tilt < 30 deg relative to camera axis.
+4. After sticking all 5, measure with ruler:
+   - Each tag center's offset from the bin/shelf reference point
+   - Update `BIN_MODEL["tags"][...]["offset_mm"]` and `SHELF_MODEL["tags"][...]["offset_mm"]`
+     in `config.py` with the measured values (replace the TODO placeholders).
