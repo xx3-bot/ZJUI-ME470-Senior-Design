@@ -1,0 +1,92 @@
+<mujoco model="km1_like_arm">
+  <compiler angle="degree" coordinate="local"/>
+
+  <option timestep="0.002" gravity="0 0 -9.81"/>
+
+  <default>
+    <joint limited="true" damping="0.25" armature="0.01"/>
+    <geom contype="1" conaffinity="1" rgba="0.72 0.78 0.84 1"/>
+    <site size="0.012" rgba="0.1 0.6 1 1"/>
+  </default>
+
+  <asset>
+    <material name="base_mat" rgba="0.18 0.20 0.23 1"/>
+    <material name="link_a" rgba="0.36 0.62 0.82 1"/>
+    <material name="link_b" rgba="0.88 0.70 0.32 1"/>
+    <material name="gripper_mat" rgba="0.22 0.22 0.24 1"/>
+    <material name="book_mat" rgba="0.78 0.12 0.16 1"/>
+    <material name="page_mat" rgba="0.96 0.92 0.78 1"/>
+    <material name="shelf_mat" rgba="0.62 0.42 0.24 1"/>
+    <material name="workspace_mat" rgba="0.1 0.7 0.3 0.18"/>
+  </asset>
+
+  <worldbody>
+    <geom name="floor" type="plane" size="0.8 0.8 0.01" rgba="0.92 0.92 0.90 1"/>
+    <geom name="return_bin_hint" type="box" pos="0 0.32 0.025" size="0.16 0.10 0.025"
+          rgba="0.20 0.42 0.84 0.18" contype="0" conaffinity="0"/>
+    <geom name="side_return_bin_hint" type="box" pos="0.30 0.10 0.0385" size="0.08 0.07 0.0385"
+          rgba="0.20 0.42 0.84 0.18" contype="0" conaffinity="0"/>
+    <geom name="return_book_cover" type="box" pos="0.30 0.10 0.100" euler="0 0 90" size="0.005 0.070 0.100"
+          material="book_mat" contype="0" conaffinity="0"/>
+    <geom name="return_book_pages" type="box" pos="0.304 0.10 0.100" euler="0 0 90" size="0.004 0.060 0.092"
+          material="page_mat" contype="0" conaffinity="0"/>
+    <geom name="shelf_platform_low" type="box" pos="0 0.33 0.035" size="0.24 0.055 0.005"
+          material="shelf_mat" contype="0" conaffinity="0"/>
+    <geom name="shelf_platform_high" type="box" pos="0 0.33 0.275" size="0.24 0.055 0.005"
+          material="shelf_mat" contype="0" conaffinity="0"/>
+    <body name="base" pos="0 0 0.048">
+      <geom name="base_geom" type="cylinder" size="0.055 0.035" material="base_mat"/>
+      <joint name="base_yaw" type="hinge" axis="0 0 1" range="-135 135"/>
+
+      <body name="shoulder" pos="0 0 0.055">
+        <geom name="shoulder_geom" type="sphere" size="0.035" material="base_mat"/>
+        <joint name="shoulder_pitch" type="hinge" axis="0 1 0" range="-120 120"/>
+        <geom name="upper_arm" type="capsule" fromto="0 0 0 0.105 0 0" size="0.018" material="link_a"/>
+
+        <body name="elbow" pos="0.105 0 0">
+          <geom name="elbow_geom" type="sphere" size="0.030" material="base_mat"/>
+          <joint name="elbow_pitch" type="hinge" axis="0 1 0" range="-135 135"/>
+          <geom name="forearm" type="capsule" fromto="0 0 0 0.08635 0 0" size="0.016" material="link_b"/>
+
+          <body name="wrist_pitch_body" pos="0.08635 0 0">
+            <geom name="wrist_geom" type="sphere" size="0.024" material="base_mat"/>
+            <joint name="wrist_pitch" type="hinge" axis="0 1 0" range="-120 120"/>
+            <geom name="wrist_link" type="capsule" fromto="0 0 0 0.100 0 0" size="0.012" material="link_a"/>
+
+            <body name="wrist_roll_body" pos="0.100 0 0">
+              <joint name="wrist_roll" type="hinge" axis="1 0 0" range="-135 135"/>
+              <geom name="gripper_palm" type="box" pos="0.025 0 0" size="0.025 0.030 0.012" material="gripper_mat"/>
+              <geom name="left_finger" type="box" pos="0.060 0.026 0" size="0.030 0.006 0.008" material="gripper_mat"/>
+              <geom name="right_finger" type="box" pos="0.060 -0.026 0" size="0.030 0.006 0.008" material="gripper_mat"/>
+              <geom name="held_book_spine" type="box" pos="0.003 0 0" size="0.006 0.005 0.100"
+                    material="book_mat" contype="0" conaffinity="0"/>
+              <geom name="held_book_cover" type="box" pos="0.070 0 0" size="0.070 0.005 0.100"
+                    material="book_mat" contype="0" conaffinity="0"/>
+              <geom name="held_book_pages" type="box" pos="0.074 0.001 0" size="0.060 0.004 0.092"
+                    material="page_mat" contype="0" conaffinity="0"/>
+              <site name="ee_site" pos="0.025 0 0" euler="0 0 0"/>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <body name="placed_book_body" pos="0 0.315 0.095">
+      <joint name="placed_book_free" type="free" limited="false" damping="0" armature="0"/>
+      <geom name="placed_book_spine" type="box" pos="0.003 0 0" size="0.006 0.005 0.100"
+            material="book_mat" contype="0" conaffinity="0"/>
+      <geom name="placed_book_cover" type="box" pos="0.070 0 0" size="0.070 0.005 0.100"
+            material="book_mat" contype="0" conaffinity="0"/>
+      <geom name="placed_book_pages" type="box" pos="0.074 0.001 0" size="0.060 0.004 0.092"
+            material="page_mat" contype="0" conaffinity="0"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <position name="base_yaw_ctrl" joint="base_yaw" kp="20"/>
+    <position name="shoulder_pitch_ctrl" joint="shoulder_pitch" kp="20"/>
+    <position name="elbow_pitch_ctrl" joint="elbow_pitch" kp="20"/>
+    <position name="wrist_pitch_ctrl" joint="wrist_pitch" kp="10"/>
+    <position name="wrist_roll_ctrl" joint="wrist_roll" kp="5"/>
+  </actuator>
+</mujoco>

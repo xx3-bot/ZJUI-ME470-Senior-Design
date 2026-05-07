@@ -1,0 +1,5 @@
+# Observed startup/reset test command, not a calibrated geometric home pose.
+# Send this before the full pick/place sequence only to verify serial control.
+# User observed that this pose can appear physically skewed, so do not treat it
+# as "arm straight up" until servo definitions are calibrated.
+{G0001#000P1500T1500!#001P2000T1500!#002P2000T1500!#003P0850T1500!#004P1500T1500!#005P1500T1500!}
