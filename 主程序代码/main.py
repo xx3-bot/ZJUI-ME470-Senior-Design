@@ -180,7 +180,78 @@ def main() -> None:
         action="store_true",
         help="For --run-target-sequence, generate and print commands without opening serial.",
     )
+    parser.add_argument(
+        "--use-vision-for-pick",
+        action="store_true",
+        help=(
+            "Replace FIXED_PICK_POSE with vision.world_pose_provider output. "
+            "Requires camera + PaddleOCR available. Falls back to FIXED_PICK_POSE "
+            "if vision returns None."
+        ),
+    )
+    parser.add_argument(
+        "--vision-shadow-mode",
+        action="store_true",
+        help=(
+            "Run vision pose detection in parallel for logging only; do not "
+            "replace FIXED_PICK_POSE. Useful to verify the data pipeline without "
+            "changing demo behavior."
+        ),
+    )
+    parser.add_argument(
+        "--fake-vision-pose",
+        nargs=3,
+        type=float,
+        metavar=("X", "Y", "Z"),
+        help=(
+            "Inject a fixed pose into vision.world_pose_provider.get_pick_world_pose. "
+            "Used to verify the PickPlacePlan wiring without exercising the real camera/OCR."
+        ),
+    )
+    parser.add_argument(
+        "--startup-calibrate",
+        action="store_true",
+        help=(
+            "Run AprilTag-based startup calibration of bin and shelf positions. "
+            "Captures 2 frames (bin and shelf) and writes runtime_state. "
+            "Currently uses single frame for both (smoke test); real demo "
+            "should rotate joint 0 between captures."
+        ),
+    )
     args = parser.parse_args()
+
+    # Vision integration flags (apply before sim_mode init / controller import,
+    # so config.get_pick_place_plan() sees the right state on first call).
+    if args.use_vision_for_pick:
+        config.USE_VISION_FOR_PICK = True
+    if args.vision_shadow_mode:
+        config.VISION_SHADOW_MODE = True
+    if args.fake_vision_pose is not None:
+        config.FAKE_VISION_PICK_POSE = (
+            float(args.fake_vision_pose[0]),
+            float(args.fake_vision_pose[1]),
+            float(args.fake_vision_pose[2]),
+        )
+
+    if args.startup_calibrate:
+        from vision.camera import CameraError, RGBCamera
+        from vision.object_localization import run_startup_calibration
+
+        try:
+            cam = RGBCamera.instance()
+            frame_bin = cam.read_frame()
+            # TODO: 真实 demo 时这里要先转 joint 0 = JOINT0_SHELF_SCAN_DEG，等到位再拍
+            #       现在 smoke test 用同一帧（要求 bin + shelf 都在画面里同时看到）
+            frame_shelf = cam.read_frame()
+        except CameraError as exc:
+            print(f"[CAL] 启动校准失败：相机不可用：{exc}")
+            return
+
+        ok = run_startup_calibration(frame_bin, frame_shelf)
+        if not ok:
+            print("[CAL] 启动校准失败，请检查 AprilTag 是否被遮挡或贴反")
+            return
+        print("[CAL] 启动校准完成")
 
     if args.target_viewer:
         if args.pick is None or args.place is None:

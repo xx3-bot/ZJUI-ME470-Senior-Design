@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 from pick_place_plan import (
     DEFAULT_PICK_APPROACH_CLEARANCE_MM,
@@ -11,6 +11,148 @@ from pick_place_plan import (
     PickPlacePlan,
     from_tuples,
 )
+
+
+# ---------------------------------------------------------------------------
+# Vision module configuration（视觉与机械运动模块对接相关）
+# ---------------------------------------------------------------------------
+USE_MOCK_VISION: bool = True
+USE_VISION_FOR_PICK: bool = False
+VISION_SHADOW_MODE: bool = False
+FAKE_VISION_PICK_POSE: Tuple[float, float, float] | None = None
+
+RGB_CAMERA_INDEX: int = 0
+RGB_FRAME_WIDTH: int = 1280
+RGB_FRAME_HEIGHT: int = 720
+
+# C920e 1280x720 棋盘格标定结果（reprojection RMS = 0.299 px, 2026-05-05）
+RGB_INTRINSICS_FX_PX: float = 962.98
+RGB_INTRINSICS_FY_PX: float = 964.73
+RGB_INTRINSICS_CX_PX: float = 609.01
+RGB_INTRINSICS_CY_PX: float = 358.15
+
+# 相机外参（占位值，装机后实测替换）
+CAMERA_TRANSLATION_MM: Tuple[float, float, float] = (0.0, -400.0, 200.0)
+CAMERA_ORIENTATION_MODE: str = "ARM_FACING"
+
+# 已知书目 + 物理尺寸 + OCR 标题文字段物理高度（用于深度反推）
+KNOWN_BOOK_TITLES: List[str] = [
+    "习近平新时代中国特色社会主义思想概论",
+    "羊皮卷",
+]
+KNOWN_BOOK_DIMENSIONS_MM: Dict[str, Dict[str, float]] = {
+    "习近平新时代中国特色社会主义思想概论": {
+        "spine_height":          227.0,
+        "cover_width":           150.0,
+        "thickness":              25.0,
+        "ocr_visible_height_mm": 110.0,
+    },
+    "羊皮卷": {
+        "spine_height":          210.0,
+        "cover_width":           150.0,
+        "thickness":               7.0,
+        "ocr_visible_height_mm":  33.0,
+    },
+}
+# 全局 fallback：仅给没填 ocr_visible_height_mm 的书用
+OCR_TO_REAL_HEIGHT_RATIO: float = 0.485
+
+# ---------------------------------------------------------------------------
+# AprilTag / 启动校准（一键启动用，bin/shelf 随便摆都能自动定位）
+# ---------------------------------------------------------------------------
+# 所有 "TODO: 实测" 标记的常量都是占位值，机械同学装好后用尺测量实际值再改。
+
+APRILTAG_DICT_NAME: str = "DICT_4X4_50"
+
+# 抓握高度（机械同学硬编码）
+GRIPPER_PICK_HEIGHT_MM: float = 100.0
+# 爪子最大张开宽度 + 安全裕量（决定 slot 评分阈值）
+GRIPPER_OPEN_WIDTH_MM: float = 60.0      # TODO: 实测后填入
+GRIPPER_SAFETY_MARGIN_MM: float = 10.0
+
+# 启动校准时机械臂转到这两个角度，分别看 bin / shelf
+JOINT0_BIN_SCAN_DEG: float = 0.0         # TODO: 实测后填入
+JOINT0_SHELF_SCAN_DEG: float = 30.0      # TODO: 实测后填入
+
+
+# ---------------------------------------------------------------------------
+# 相机相对机械臂底座的固定外参（装机一次性测量）
+# ---------------------------------------------------------------------------
+# 相机镜头中心相对机械臂底座 yaw 关节几何中心的偏移 (mm)
+# joint 0 = 0° 时为基准位置；运行时随 joint 0 旋转
+# TODO: 装机后实测填入
+CAMERA_MOUNT_OFFSET_MM: Tuple[float, float, float] = (0.0, 50.0, 30.0)
+# 相机光轴相对水平面的上仰角（度），仰起为正
+# TODO: 实测填入
+CAMERA_MOUNT_PITCH_DEG: float = 20.0
+
+
+# ---------------------------------------------------------------------------
+# BIN（还书框）几何模型
+# ---------------------------------------------------------------------------
+# bin 几何参考点（坐标原点）：bin 物体上某个固定点（建议 bin 前面板左下角）
+# 所有 offset 都相对这个点。实测时只测 offset，参考点本身不需要世界坐标——
+# 启动时 AprilTag 把这个参考点定位到世界系。
+#
+# bin 不分 slot：书可能在 bin 内任意位置，OCR 找。这里只描述 bin 内"可能出现书的区域"。
+BIN_MODEL: Dict = {
+    # 2 个 30mm AprilTag，贴在 bin 前面板下横条左/右两端
+    "tags": {
+        # tag_id: { "size_mm": 边长, "offset_mm": tag 中心相对 bin 参考点的 (x, y, z) 偏移 }
+        10: {"size_mm": 30.0, "offset_mm": (50.0, 0.0, 0.0)},    # TODO: 实测，左 tag
+        11: {"size_mm": 30.0, "offset_mm": (210.0, 0.0, 0.0)},   # TODO: 实测，右 tag
+    },
+    # bin 内书可能出现的"前面平面"几何（书脊面所在平面）
+    # 该平面的中心相对 bin 参考点的偏移
+    "pickable_plane_center_offset_mm": (130.0, 30.0, 80.0),  # TODO: 实测
+    # 该平面的法向（默认朝 +z 即朝相机方向）
+    "pickable_plane_normal":           (0.0, 0.0, 1.0),
+    # 平面尺寸：书脊横向铺开范围 + 高度
+    "pickable_area_width_mm":  260.0,   # TODO: 实测
+    "pickable_area_height_mm": 200.0,   # TODO: 实测
+}
+
+
+# ---------------------------------------------------------------------------
+# SHELF（书架）几何模型
+# ---------------------------------------------------------------------------
+# 几何参考点：建议书架前面板左下角，所有 offset 相对它。
+SHELF_MODEL: Dict = {
+    # 3 个 30mm AprilTag，贴在书架底部三脚正面
+    "tags": {
+        0: {"size_mm": 30.0, "offset_mm": (50.0,   0.0, 0.0)},  # TODO: 实测，左脚
+        1: {"size_mm": 30.0, "offset_mm": (200.0,  0.0, 0.0)},  # TODO: 实测，中脚
+        2: {"size_mm": 30.0, "offset_mm": (350.0,  0.0, 0.0)},  # TODO: 实测，右脚
+    },
+    # 4 个 zone 的几何
+    # center_offset_mm: zone 中心（用于书脊高度参考）相对 shelf 参考点的偏移
+    # width_mm:         zone 内能放书的横向宽度（slot 切片用）
+    # height_mm:        zone 单层高度（书的活动空间）
+    # slot_count:       placement 评分时把 zone 切成几个 slot
+    # grasp_z_mm:       该 zone 抓握/放置时机械臂末端 z 高度（队友硬编码）
+    "zones": {
+        # TODO: 4 个 zone 的所有数值实测
+        "A": {"center_offset_mm": (100.0, 350.0, 0.0), "width_mm": 180.0, "height_mm": 220.0, "slot_count": 8, "grasp_z_mm": 100.0},
+        "B": {"center_offset_mm": (300.0, 350.0, 0.0), "width_mm": 180.0, "height_mm": 220.0, "slot_count": 8, "grasp_z_mm": 100.0},
+        "C": {"center_offset_mm": (100.0, 100.0, 0.0), "width_mm": 180.0, "height_mm": 220.0, "slot_count": 8, "grasp_z_mm": 100.0},
+        "D": {"center_offset_mm": (300.0, 100.0, 0.0), "width_mm": 180.0, "height_mm": 220.0, "slot_count": 8, "grasp_z_mm": 100.0},
+    },
+    # zone 平面的法向（默认 +z 朝相机）
+    "zone_plane_normal": (0.0, 0.0, 1.0),
+}
+
+
+# OCR / YOLO
+YOLO_MODEL_PATH: str = "yolov8n.pt"
+YOLO_BOOK_CLASS_ID: int = 73
+YOLO_MIN_CONF: float = 0.4
+OCR_LANG: str = "ch"
+OCR_MIN_SCORE: float = 0.4
+OCR_MIN_FONT_THICKNESS: float = 6.0
+OCR_FUZZY_MATCH_CUTOFF: float = 0.4
+OCR_MAX_INPUT_SIDE: int = 1600
+OCR_DET_MODEL_NAME: str = "PP-OCRv5_mobile_det"
+OCR_REC_MODEL_NAME: str = "PP-OCRv5_mobile_rec"
 
 
 ARM_LENGTH = 0.0
@@ -252,11 +394,57 @@ def get_pick_place_plan() -> PickPlacePlan:
     - `place_approach`: pre-release approach waypoint
     - `place_final`: release waypoint
     - `place_retreat`: post-release retreat waypoint
+
+    视觉对接路径：
+    - USE_VISION_FOR_PICK=True：调用 vision.world_pose_provider.get_pick_world_pose()
+      用真实/注入的视觉 pose 替换 FIXED_PICK_POSE。识别失败回退到固定值。
+    - VISION_SHADOW_MODE=True：影子模式——求一次但不替换，仅用于日志验证通路。
     """
+    pick_pose = FIXED_PICK_POSE
+
+    if USE_VISION_FOR_PICK or VISION_SHADOW_MODE:
+        from vision.world_pose_provider import get_pick_world_pose
+
+        title = KNOWN_BOOK_TITLES[0] if KNOWN_BOOK_TITLES else ""
+        world = get_pick_world_pose(title)
+        if world is not None:
+            print(
+                f"[VISION->PLAN] vision_pick=({world[0]:.1f}, {world[1]:.1f}, {world[2]:.1f}) "
+                f"title={title!r}"
+            )
+            if USE_VISION_FOR_PICK:
+                pick_pose = world
+            else:
+                print("[VISION->PLAN] SHADOW_MODE: keeping FIXED_PICK_POSE")
+        else:
+            print(
+                f"[VISION->PLAN] vision_pick=None title={title!r} "
+                "→ falling back to FIXED_PICK_POSE"
+            )
+
+    derived_pick_approach = (
+        pick_pose[0],
+        pick_pose[1],
+        pick_pose[2] + FIXED_PICK_APPROACH_CLEARANCE_MM,
+    )
+    derived_pick_lift = (
+        pick_pose[0],
+        pick_pose[1],
+        pick_pose[2] + FIXED_POST_GRASP_LIFT_MM,
+    )
+
     return from_tuples(
-        pick_approach=FIXED_PICK_APPROACH_POSE,
-        pick_lift=FIXED_PICK_LIFT_POSE,
-        pick=FIXED_PICK_POSE,
+        pick_approach=(
+            FIXED_PICK_APPROACH_POSE
+            if pick_pose == FIXED_PICK_POSE
+            else derived_pick_approach
+        ),
+        pick_lift=(
+            FIXED_PICK_LIFT_POSE
+            if pick_pose == FIXED_PICK_POSE
+            else derived_pick_lift
+        ),
+        pick=pick_pose,
         place_transfer=FIXED_PLACE_TRANSFER_POSE,
         place_approach=FIXED_PLACE_APPROACH_POSE,
         place_final=FIXED_PLACE_FINAL_POSE,
