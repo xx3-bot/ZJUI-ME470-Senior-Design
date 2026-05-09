@@ -4,8 +4,150 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import sys
 
 import config
+
+
+DEFAULT_HARDWARE_PICK = (218.0, 120.23, 115.0)
+DEFAULT_HARDWARE_PLACE = (-40.0, 260.0, 124.25)
+DEFAULT_INTERACTIVE_FIXED_STEP_DELAY = 2.5
+
+
+def _format_vec(values: tuple[float, float, float]) -> str:
+    return " ".join(f"{value:g}" for value in values)
+
+
+def _read_input(prompt: str) -> str:
+    try:
+        return input(prompt)
+    except EOFError:
+        print()
+        return ""
+
+
+def _prompt_choice() -> str:
+    print()
+    print("ME470 Integrated Algorithm")
+    print("1. Run hardware command sequence")
+    print("   Generate a fresh trajectory from pick/place and send it to the arm.")
+    print("2. Dry run hardware path")
+    print("   Generate the same trajectory/commands, but do not open the serial port.")
+    print("3. Simulation mode")
+    print("   Run the sim_output backend for feasibility/logging; no hardware commands.")
+    print("4. Target viewer")
+    print("   Generate pick/place trajectory and open the MuJoCo animation.")
+    print("q. Quit")
+    print()
+    return _read_input("Select mode [2]: ").strip().lower() or "2"
+
+
+def _prompt_float(label: str, default: float) -> float:
+    while True:
+        raw = _read_input(f"{label} [{default:g}]: ").strip()
+        if raw == "":
+            return default
+        try:
+            return float(raw)
+        except ValueError:
+            print("Please enter a number, or press Enter for the default.")
+
+
+def _prompt_int(label: str, default: int) -> int:
+    while True:
+        raw = _read_input(f"{label} [{default}]: ").strip()
+        if raw == "":
+            return default
+        try:
+            return int(raw)
+        except ValueError:
+            print("Please enter an integer, or press Enter for the default.")
+
+
+def _prompt_vec3(label: str, default: tuple[float, float, float]) -> tuple[float, float, float]:
+    while True:
+        raw = _read_input(f"{label} X Y Z [{_format_vec(default)}]: ").strip()
+        if raw == "":
+            return default
+        parts = raw.replace(",", " ").split()
+        if len(parts) != 3:
+            print("Please enter exactly three numbers: X Y Z.")
+            continue
+        try:
+            return (float(parts[0]), float(parts[1]), float(parts[2]))
+        except ValueError:
+            print("Please enter numbers only, or press Enter for the default.")
+
+
+def _prompt_text(label: str, default: str) -> str:
+    raw = _read_input(f"{label} [{default}]: ").strip()
+    return raw or default
+
+
+def _prompt_wait_trigger(default: str = "space") -> str:
+    choices = {"none", "space", "button"}
+    while True:
+        raw = _read_input(f"Wait trigger: none / space / button [{default}]: ").strip().lower()
+        value = raw or default
+        if value in choices:
+            return value
+        print("Please enter one of: none, space, button.")
+
+
+def _append_vec3(argv: list[str], flag: str, values: tuple[float, float, float]) -> None:
+    argv.append(flag)
+    argv.extend(f"{value:g}" for value in values)
+
+
+def _interactive_argv() -> list[str]:
+    choice = _prompt_choice()
+    if choice in {"q", "quit", "exit"}:
+        print("Exiting.")
+        raise SystemExit(0)
+
+    if choice not in {"1", "2", "3", "4"}:
+        print("Unknown selection; defaulting to dry run.")
+        choice = "2"
+
+    argv: list[str] = []
+    if choice in {"1", "2", "4"}:
+        pick = _prompt_vec3("Pick point", DEFAULT_HARDWARE_PICK)
+        place = _prompt_vec3("Place point", DEFAULT_HARDWARE_PLACE)
+        _append_vec3(argv, "--pick", pick)
+        _append_vec3(argv, "--place", place)
+
+    if choice == "1":
+        argv.append("--run-target-sequence")
+        argv.extend(["--hardware-port", _prompt_text("Hardware serial port", "/dev/ttyUSB0")])
+        argv.extend(["--hardware-baud", str(_prompt_int("Hardware baud", 115200))])
+        fixed_delay = _prompt_float("Fixed delay after each command, seconds", DEFAULT_INTERACTIVE_FIXED_STEP_DELAY)
+        argv.extend(["--fixed-step-delay", f"{fixed_delay:g}"])
+        argv.extend(["--wait-trigger", _prompt_wait_trigger("space")])
+        return argv
+
+    if choice == "2":
+        argv.append("--run-target-sequence")
+        argv.append("--dry-run")
+        return argv
+
+    if choice == "3":
+        argv.append("--sim-mode")
+        book_x = _prompt_float("Book/pick X", config.RETURN_BOOK_X)
+        book_y = _prompt_float("Book/pick Y", config.RETURN_BOOK_Y)
+        book_z = _prompt_float("Book/pick Z", config.RETURN_BOOK_Z)
+        argv.extend(["--book-xy", f"{book_x:g}", f"{book_y:g}"])
+        argv.extend(["--book-z", f"{book_z:g}"])
+
+        place_final = _prompt_vec3("Sim final place point", config.FIXED_PLACE_FINAL_POSE)
+        _append_vec3(argv, "--place-final", place_final)
+        place_retreat = _prompt_vec3("Sim retreat point", config.FIXED_PLACE_RETREAT_POSE)
+        _append_vec3(argv, "--place-retreat", place_retreat)
+        place_approach = _prompt_vec3("Sim approach point", config.FIXED_PLACE_APPROACH_POSE)
+        _append_vec3(argv, "--place-approach", place_approach)
+        return argv
+
+    argv.append("--target-viewer")
+    return argv
 
 
 def main() -> None:
@@ -13,7 +155,7 @@ def main() -> None:
     parser.add_argument(
         "--sim-mode",
         action="store_true",
-        help="Enable sim_output motion backend and logging.",
+        help="Simulation backend only. Does not generate or send hardware commands.",
     )
     parser.add_argument(
         "--book-xy",
@@ -93,17 +235,17 @@ def main() -> None:
     parser.add_argument(
         "--viewer",
         action="store_true",
-        help="Record trajectory and open MuJoCo visualization after execution.",
+        help="Simulation/debug only: record trajectory and open MuJoCo visualization after execution.",
     )
     parser.add_argument(
         "--run-target-sequence",
         action="store_true",
-        help="Generate a pick/place hardware sequence from --pick/--place and optionally send it.",
+        help="Formal hardware path: generate a fresh pick/place command sequence from --pick/--place and optionally send it.",
     )
     parser.add_argument(
         "--target-viewer",
         action="store_true",
-        help="Generate a target-sequence trajectory from --pick/--place and open the MuJoCo viewer.",
+        help="Simulation/debug only: generate a target-sequence trajectory from --pick/--place and open the MuJoCo viewer.",
     )
     parser.add_argument(
         "--pick",
@@ -218,7 +360,35 @@ def main() -> None:
             "should rotate joint 0 between captures."
         ),
     )
-    args = parser.parse_args()
+    argv = _interactive_argv() if len(sys.argv) == 1 else sys.argv[1:]
+    args = parser.parse_args(argv)
+
+    sim_override_flags = (
+        args.sim_mode
+        or args.viewer
+        or args.book_xy is not None
+        or args.book_z is not None
+        or args.pick_approach is not None
+        or args.pick_approach_clearance is not None
+        or args.pick_lift is not None
+        or args.post_grasp_lift is not None
+        or args.place_transfer is not None
+        or args.place_approach is not None
+        or args.place_final is not None
+        or args.place_retreat is not None
+        or args.sim_log_path is not None
+    )
+
+    if args.run_target_sequence and (args.target_viewer or sim_override_flags):
+        parser.error(
+            "--run-target-sequence is the formal hardware-generation path. "
+            "Do not combine it with --sim-mode, --viewer, --target-viewer, or simulation waypoint overrides."
+        )
+    if args.target_viewer and sim_override_flags:
+        parser.error(
+            "--target-viewer is a simulation/debug viewer path. "
+            "Do not combine it with --sim-mode, --viewer, or pick-place-only simulation overrides."
+        )
 
     # Vision integration flags (apply before sim_mode init / controller import,
     # so config.get_pick_place_plan() sees the right state on first call).
@@ -283,6 +453,12 @@ def main() -> None:
     if args.run_target_sequence:
         if args.pick is None or args.place is None:
             parser.error("--run-target-sequence requires --pick X Y Z and --place X Y Z")
+        print(
+            "[RUNTIME] Formal hardware-generation path: generating a fresh "
+            "trajectory and command sequence from this run's --pick/--place. "
+            "No sim backend or MuJoCo viewer will be launched.",
+            flush=True,
+        )
         from target_sequence import (
             TimingConfig,
             generate_target_sequence,
@@ -315,22 +491,13 @@ def main() -> None:
         return
 
     viewer_mode = args.viewer
-    sim_mode = (
-        args.sim_mode
-        or viewer_mode
-        or args.book_xy is not None
-        or args.book_z is not None
-        or args.pick_approach is not None
-        or args.pick_approach_clearance is not None
-        or args.pick_lift is not None
-        or args.post_grasp_lift is not None
-        or args.place_transfer is not None
-        or args.place_approach is not None
-        or args.place_final is not None
-        or args.place_retreat is not None
-        or args.sim_log_path is not None
-    )
+    sim_mode = sim_override_flags
     if sim_mode or viewer_mode:
+        print(
+            "[RUNTIME] Simulation/viewer path enabled. This path uses the "
+            "sim_output backend and does not send hardware commands.",
+            flush=True,
+        )
         book_x = args.book_xy[0] if args.book_xy is not None else None
         book_y = args.book_xy[1] if args.book_xy is not None else None
         book_z = args.book_z if args.book_z is not None else None

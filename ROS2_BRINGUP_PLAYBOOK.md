@@ -195,7 +195,7 @@ Shelf placement simulation note:
 - Visual MuJoCo motion may appear to leave unused upper space, but the vendor ESP32 analytical IK is the stricter source for current hardware planning.
 
 Deeper lower-shelf three-point trajectory:
-- Created `sim/lower_shelf_deep_trajectory.csv`.
+- Created `sim/examples/lower_shelf_deep_trajectory.csv`.
 - Intended to test lower shelf left/center/right while pushing the book deeper into the shelf.
 - Placement-oriented targets, all passing `esp32_factory` with `alpha=-45:-25`:
   - `(-80, 240, 95) mm` -> PWM `(1636,1242,1695,0953)`
@@ -203,7 +203,7 @@ Deeper lower-shelf three-point trajectory:
   - `(80, 240, 95) mm` -> PWM `(1363,1242,1695,0953)`
 - Viewer command on macOS:
 ```bash
-mjpython sim/km1_trajectory_viewer.py --trajectory sim/lower_shelf_deep_trajectory.csv --alpha-range=-45:-25 --loop
+mjpython sim/km1_trajectory_viewer.py --trajectory sim/examples/lower_shelf_deep_trajectory.csv --alpha-range=-45:-25 --loop
 ```
 
 Gate status:
@@ -226,10 +226,10 @@ Current progress:
   - upper platform around `z=350 mm`
 - macOS viewer must be launched with `mjpython`, not `python3`.
 - A deeper lower-shelf trajectory exists:
-  - `sim/lower_shelf_deep_trajectory.csv`
+  - `sim/examples/lower_shelf_deep_trajectory.csv`
   - run with:
 ```bash
-mjpython sim/km1_trajectory_viewer.py --trajectory sim/lower_shelf_deep_trajectory.csv --alpha-range=-45:-25 --loop
+mjpython sim/km1_trajectory_viewer.py --trajectory sim/examples/lower_shelf_deep_trajectory.csv --alpha-range=-45:-25 --loop
 ```
 
 Current active lower-shelf placement candidates:
@@ -272,7 +272,7 @@ Additional simulation update:
 - Update made:
   - `sim/km1_trajectory_viewer.py` now constrains the end-link local x-axis to stay close to horizontal/radial by default.
   - Use `--free-end-link` to recover the old position-only behavior.
-  - `sim/lower_shelf_aggressive_trajectory.csv` created for deeper targets around `y=300 mm`.
+  - `sim/examples/lower_shelf_aggressive_trajectory.csv` created for deeper targets around `y=300 mm`.
 - Aggressive lower-shelf targets, all passing ESP32 factory IK with `alpha=-35:-25`:
 ```text
 left:   (-50, 300, 105) mm
@@ -284,7 +284,7 @@ right:  ( 50, 300, 105) mm
   - end-link axis error about `0.039`
 - Viewer command on macOS:
 ```bash
-mjpython sim/km1_trajectory_viewer.py --trajectory sim/lower_shelf_aggressive_trajectory.csv --alpha-range=-35:-25 --loop
+mjpython sim/km1_trajectory_viewer.py --trajectory sim/examples/lower_shelf_aggressive_trajectory.csv --alpha-range=-35:-25 --loop
 ```
 
 Pick-and-place mock cycle added:
@@ -301,9 +301,9 @@ return_book_visible
 placed_book_visible
 horizontal_end_link
 ```
-- `horizontal_end_link` is optional and overrides the viewer-wide orientation mode for that waypoint. In `sim/pick_and_place_trajectory.csv`, side pickup and shelf placement/release rows now use `horizontal_end_link=1` so the end link is leveled before gripping/releasing the book.
+- `horizontal_end_link` is optional and overrides the viewer-wide orientation mode for that waypoint. In `sim/examples/pick_and_place_trajectory.csv`, side pickup and shelf placement/release rows now use `horizontal_end_link=1` so the end link is leveled before gripping/releasing the book.
 - Added a free-joint placed-book body. After the release waypoint, `placed_book_visible=1` shows a book whose pose is copied from the gripper-held book at release, then shifted only in world Z so the book's lowest point touches the lower shelf surface. This means final book orientation now depends on the actual release pose instead of a fixed upright/static placeholder.
-- Added `sim/pick_and_place_trajectory.csv` to simulate:
+- Added `sim/examples/pick_and_place_trajectory.csv` to simulate:
   1. start/ready
   2. move to side return-bin book
   3. pick/lift
@@ -316,7 +316,7 @@ horizontal_end_link
   - MuJoCo position IK solves all waypoints with about `0.2-3.0 mm` error after moving the pickup book farther out
 - Current viewer command on macOS:
 ```bash
-mjpython sim/km1_trajectory_viewer.py --trajectory sim/pick_and_place_trajectory.csv --free-end-link --loop
+mjpython sim/km1_trajectory_viewer.py --trajectory sim/examples/pick_and_place_trajectory.csv --free-end-link --loop
 ```
 - Note: `--free-end-link` is still used globally, but pickup and placement rows use `horizontal_end_link=1`, so per-waypoint orientation constraints are available and used for gripping/release.
 - `--loop` is included so the mock pick-and-place cycle repeats continuously in the viewer.
@@ -351,9 +351,9 @@ wrist_pitch:    -110..110 deg
   - temporarily flipped the held/placed book local geometry to the left side of `ee_site`, then reverted it after the user clarified only the pre-pick book state should be corrected
   - `ee_site` remains the grasp/control point at the spine/edge grip location
 - Current verification:
-  - `sim/lower_shelf_aggressive_trajectory.csv` still passes with horizontal end-link constraint.
-  - `sim/pick_and_place_trajectory.csv` still passes with `--free-end-link`.
-  - `sim/lower_shelf_deep_trajectory.csv` should be treated as position-only/reference with `--free-end-link`; it may fail under strict horizontal end-link constraint after the joint-range tightening.
+  - `sim/examples/lower_shelf_aggressive_trajectory.csv` still passes with horizontal end-link constraint.
+  - `sim/examples/pick_and_place_trajectory.csv` still passes with `--free-end-link`.
+  - `sim/examples/lower_shelf_deep_trajectory.csv` should be treated as position-only/reference with `--free-end-link`; it may fail under strict horizontal end-link constraint after the joint-range tightening.
 
 ### 2026-04-30 - MuJoCo Manual-Tuning Joint Ranges Reopened
 

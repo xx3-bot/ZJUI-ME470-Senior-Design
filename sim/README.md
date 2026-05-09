@@ -1,6 +1,8 @@
 # KM1-like MuJoCo Workspace Simulator
 
 This folder contains a first-pass MuJoCo model and analysis script for the ME470 book-reshelving arm.
+The top-level scripts are tools; historical CSV trajectories and IK probes live under
+`examples/` and `diagnostics/` so they cannot be mistaken for the formal runtime path.
 
 The model is intentionally a configurable engineering approximation, not a calibrated KM1 digital twin yet.
 Use it to answer early layout and control questions:
@@ -17,12 +19,12 @@ Use it to answer early layout and control questions:
 - `km1_workspace_sim.py`: workspace sampler, position-only IK solver, optional viewer.
 - `vendor_km1_kinematics.py`: vendor-derived analytical IK and PWM command generator.
 - `km1_trajectory_viewer.py`: MuJoCo trajectory viewer for a CSV list of target points.
-- `sample_trajectory.csv`: a small ESP32-feasible sample path.
-- `lower_shelf_deep_trajectory.csv`: three lower-shelf placement test points pushed deeper into the shelf.
-- `lower_shelf_aggressive_trajectory.csv`: a more aggressive lower-shelf path with targets around `y=300 mm`.
-- `pick_and_place_trajectory.csv`: side return-bin pick, lift, shelf approach, place, release, retreat.
-- `workspace_samples.csv`: generated point cloud of reachable gripper tip positions.
-- `ik_grid.csv`: optional generated target grid with IK success/failure.
+- `examples/sample_trajectory.csv`: a small ESP32-feasible sample path.
+- `examples/lower_shelf_deep_trajectory.csv`: three lower-shelf placement test points pushed deeper into the shelf.
+- `examples/lower_shelf_aggressive_trajectory.csv`: a more aggressive lower-shelf path with targets around `y=300 mm`.
+- `examples/pick_and_place_trajectory.csv`: historical side return-bin pick/place playback.
+- `sim/diagnostics/workspace_samples.csv`: generated point cloud of reachable gripper tip positions.
+- `diagnostics/vendor_ik_grid.csv`: optional generated target grid with IK success/failure.
 
 ## Run
 
@@ -196,19 +198,19 @@ Keyboard shortcuts in the teaching viewer:
 Play a custom trajectory:
 
 ```bash
-python3 sim/km1_trajectory_viewer.py --trajectory sim/sample_trajectory.csv --loop
+python3 sim/km1_trajectory_viewer.py --trajectory sim/examples/sample_trajectory.csv --loop
 ```
 
 On macOS:
 
 ```bash
-mjpython sim/km1_trajectory_viewer.py --trajectory sim/sample_trajectory.csv --loop
+mjpython sim/km1_trajectory_viewer.py --trajectory sim/examples/sample_trajectory.csv --loop
 ```
 
 Play the deeper lower-shelf three-point test:
 
 ```bash
-mjpython sim/km1_trajectory_viewer.py --trajectory sim/lower_shelf_deep_trajectory.csv --alpha-range=-45:-25 --free-end-link --loop
+mjpython sim/km1_trajectory_viewer.py --trajectory sim/examples/lower_shelf_deep_trajectory.csv --alpha-range=-45:-25 --free-end-link --loop
 ```
 
 This older deeper trajectory is useful for position-only motion checks. For shelf placement with a near-horizontal final link, prefer the aggressive trajectory below.
@@ -216,19 +218,19 @@ This older deeper trajectory is useful for position-only motion checks. For shel
 Play the more aggressive lower-shelf test. The viewer constrains the final link to stay close to horizontal by default:
 
 ```bash
-mjpython sim/km1_trajectory_viewer.py --trajectory sim/lower_shelf_aggressive_trajectory.csv --alpha-range=-35:-25 --loop
+mjpython sim/km1_trajectory_viewer.py --trajectory sim/examples/lower_shelf_aggressive_trajectory.csv --alpha-range=-35:-25 --loop
 ```
 
 To see the old position-only behavior:
 
 ```bash
-mjpython sim/km1_trajectory_viewer.py --trajectory sim/lower_shelf_aggressive_trajectory.csv --alpha-range=-35:-25 --free-end-link --loop
+mjpython sim/km1_trajectory_viewer.py --trajectory sim/examples/lower_shelf_aggressive_trajectory.csv --alpha-range=-35:-25 --free-end-link --loop
 ```
 
 Play the first pick-and-place mock cycle. A standing book is placed farther out at the side return-bin position near the arm's 90-degree direction:
 
 ```bash
-mjpython sim/km1_trajectory_viewer.py --trajectory sim/pick_and_place_trajectory.csv --free-end-link --loop
+mjpython sim/km1_trajectory_viewer.py --trajectory sim/examples/pick_and_place_trajectory.csv --free-end-link --loop
 ```
 
 The pick-and-place mock still uses `--free-end-link` globally, but pickup and placement waypoints override this with `horizontal_end_link=1` where the end link should be leveled.

@@ -19,7 +19,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_MODEL = ROOT / "km1_arm.xml"
-DEFAULT_OUT = ROOT / "workspace_samples.csv"
+DEFAULT_OUT = ROOT / "diagnostics" / "workspace_samples.csv"
 JOINT_NAMES = [
     "base_yaw",
     "shoulder_pitch",

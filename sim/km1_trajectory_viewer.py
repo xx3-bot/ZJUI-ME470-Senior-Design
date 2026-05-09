@@ -37,7 +37,7 @@ from vendor_km1_kinematics import ERROR_MEANINGS, PROFILES, parse_alpha_range, s
 
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_TRAJECTORY = ROOT / "sample_trajectory.csv"
+DEFAULT_TRAJECTORY = ROOT / "examples" / "sample_trajectory.csv"
 LOW_SHELF_TOP_Z_M = 0.040
 RETURN_BOOK_SPINE_TO_COVER_CENTER_M = np.array([0.070, 0.0, 0.0], dtype=float)
 RETURN_BOOK_PAGES_OFFSET_M = np.array([0.004, 0.0, 0.0], dtype=float)

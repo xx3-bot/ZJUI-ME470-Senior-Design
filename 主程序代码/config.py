@@ -187,6 +187,23 @@ DEFAULT_RUNTIME_PARAMS = {
 }
 
 
+def default_hyperparameter_input() -> str:
+    """Return the 11 runtime hyperparameters in the legacy terminal-input order."""
+    return (
+        f"{DEFAULT_RUNTIME_PARAMS['ARM_LENGTH']} "
+        f"{DEFAULT_RUNTIME_PARAMS['SCAN_ARC']} "
+        f"{DEFAULT_RUNTIME_PARAMS['OFFSET_X']} "
+        f"{DEFAULT_RUNTIME_PARAMS['OFFSET_Y']} "
+        f"{DEFAULT_RUNTIME_PARAMS['GRIP_ORIENTATION']} "
+        f"{DEFAULT_RUNTIME_PARAMS['TIP_GAP']} "
+        f"{DEFAULT_RUNTIME_PARAMS['TIP_DEPTH']} "
+        f"{DEFAULT_RUNTIME_PARAMS['SAMPLE_RATE_MS']} "
+        f"{DEFAULT_RUNTIME_PARAMS['BOOK_VERT_HEIGHT']} "
+        f"{DEFAULT_RUNTIME_PARAMS['SHELF_H_MIN']} "
+        f"{DEFAULT_RUNTIME_PARAMS['SHELF_H_MAX']}"
+    )
+
+
 def load_default_hyperparameters() -> None:
     """Load hardcoded runtime hyperparameters for simulation mode."""
     global ARM_LENGTH, SCAN_ARC, OFFSET_X, OFFSET_Y, GRIP_ORIENTATION
@@ -205,6 +222,7 @@ def load_default_hyperparameters() -> None:
     SHELF_H_MIN = DEFAULT_RUNTIME_PARAMS["SHELF_H_MIN"]
     SHELF_H_MAX = DEFAULT_RUNTIME_PARAMS["SHELF_H_MAX"]
     INITIAL_GRIP_POS = compute_initial_grip_pose()
+    print("[CONFIG] Default hyperparameters loaded successfully.")
 SIM_OUTPUT_LOG_PATH = str(Path(__file__).resolve().parent.parent / "sim_output" / "sim_output.log")
 RETURN_BOOK_X = 218.0
 RETURN_BOOK_Y = 120.23

@@ -112,6 +112,61 @@ Acceptance target for this feature:
 - The selected result can still feed the existing control path without changing
   the hardware-driving code.
 
+### 2026-05-08 shelf-level simulation boundary
+
+Do not treat the second/upper shelf layer in the mock decision data as the main
+hardware simulation target. Upper/second-level shelf observations such as
+`B_left` / `B_right` are currently test data for scanning, task routing, and
+decision robustness. They are useful for software checks, but they are not the
+primary physical demo path.
+
+Current main motion/hardware validation path should remain the lower-shelf
+fixed pick/place flow through the verified target-sequence / command-file path:
+```text
+python3 主程序代码/main.py --sim-mode
+python3 sim_output/send_hardware_sequence.py --commands sim_output/hardware_command_sequence.txt --dry-run
+python3 sim_output/send_hardware_sequence.py --commands sim_output/hardware_command_sequence.txt --port /dev/ttyUSB0 --baud 115200 --fixed-step-delay 2.5
+```
+
+The full mock controller run without `--sim-mode` may create tasks for upper
+test zones and may attempt unreachable or non-demo targets. Use it to validate
+decision logging and software branching only. Do not use its second-layer mock
+targets as evidence that the physical arm should execute upper-shelf placement.
+
+Important correction: do not add a direct `motion_adapter -> per-pose hardware
+IK` bridge for this demo path. The verified hardware path is the generated raw
+ASCII command sequence, especially `sim_output/hardware_command_sequence.txt`,
+and the target-sequence pipeline in `主程序代码/target_sequence.py`. The vendor
+analytical IK helper in `sim_output/ik_helper.py` is useful for reachability
+checks and logs, but it must not silently replace the calibrated
+target-sequence/MuJoCo-angle-to-PWM chain.
+
+Formal runtime should generate the trajectory from the current pick/place
+targets for that run. Historical CSV trajectories and IK probe grids are
+offline simulation artifacts only; in `Integrated Algorithm` they are kept under
+`sim/examples/` and `sim/diagnostics/`, not in the top-level runtime path. They
+must never be used as implicit inputs to hardware execution.
+
+`Integrated Algorithm/RUN_MODES.md` now documents the hard separation:
+`--run-target-sequence` is the formal hardware-generation path, while
+`--sim-mode`, `--viewer`, and `--target-viewer` are simulation/debug paths only.
+`main.py` rejects mixed hardware/simulation flags instead of guessing.
+When `main.py` is run with no CLI arguments, it opens an interactive terminal
+menu with modes 1-4 for hardware send, hardware dry-run, sim mode, and target
+viewer. Pressing Enter at the menu defaults to dry-run; pressing Enter at
+parameter prompts keeps the current default values.
+The legacy 11-hyperparameter controller prompt also accepts blank input now and
+loads `config.DEFAULT_RUNTIME_PARAMS`, so the outer menu and the older
+controller setup layer share the same default behavior.
+
+Target-sequence transport retract update: `transport_retract` is now conditional
+instead of always inserted. If the pick point horizontal radius is `<= 240 mm`,
+the generator keeps the post-grasp `pick_lift` pose as the transport start and
+does not add a duplicate/retracted waypoint. If the radius is `> 240 mm`, it
+retracts toward the origin but clamps the resulting radius to at least `170 mm`.
+This avoids creating near-base points such as `[148, 0, 160]` for
+`pick = (218, 0, 115)`, which failed the MuJoCo horizontal-end-link IK check.
+
 ### Confirmed strategy
 Do **not** rewrite the whole system.
 Keep high-level logic and replace adapters first.
@@ -773,7 +828,7 @@ Target-driven motion policy update:
 - For the clean axis test input `pick=(220, 0, 115)` and
   `place=(0, 260, 124.25)`, this changes transport/lift Z from `175 mm` to
   `160 mm`.
-- The generated axis-test CSV is `sim_output/control_trajectory_axis_test.csv`.
+- The generated axis-test CSV is `sim_output/examples/control_trajectory_axis_test.csv`.
 - This is a policy change for derived target-sequence waypoints, not a change
   to the default pick/place coordinates.
 - Purpose: reduce the chance of the held book reaching/colliding with the

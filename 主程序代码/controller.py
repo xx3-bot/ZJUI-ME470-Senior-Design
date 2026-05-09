@@ -88,11 +88,17 @@ class RobotControlSystem:
             return
 
         while True:
+            defaults = config.default_hyperparameter_input()
             raw = input(
                 "Please input 11 hyperparameters: "
                 "ARM_LENGTH SCAN_ARC OFFSET_X OFFSET_Y ORIENTATION "
-                "TIP_GAP TIP_DEPTH SAMPLE_RATE_MS BOOK_VERT_HEIGHT SHELF_H_MIN SHELF_H_MAX\n> "
+                "TIP_GAP TIP_DEPTH SAMPLE_RATE_MS BOOK_VERT_HEIGHT SHELF_H_MIN SHELF_H_MAX\n"
+                f"Press Enter to use defaults:\n{defaults}\n> "
             )
+            if not raw.strip():
+                config.load_default_hyperparameters()
+                print(f"[CONFIG] Initial gripper pose = {config.INITIAL_GRIP_POS}")
+                break
             if config.parse_hyperparameters(raw):
                 break
         input("Hyperparameters loaded. Press Enter to start the control workflow...")
@@ -345,7 +351,9 @@ class RobotControlSystem:
         )
 
         self._transition("MOVE_TO_PICK_APPROACH")
-        self._move_to(pick_approach)
+        if not self._move_to(pick_approach):
+            print("[CONTROL] PICK_PLACE_ONLY aborted: failed to reach pick approach.")
+            return
         if config.VISUALIZER:
             from visualization import record_waypoint_state
 
@@ -359,7 +367,9 @@ class RobotControlSystem:
             )
 
         self._transition("MOVE_TO_PICK")
-        self._move_to(pick_pose)
+        if not self._move_to(pick_pose):
+            print("[CONTROL] PICK_PLACE_ONLY aborted: failed to reach pick pose.")
+            return
         if config.VISUALIZER:
             from visualization import record_waypoint_state
 
@@ -371,7 +381,9 @@ class RobotControlSystem:
                 placed_book_visible=False,
                 horizontal_end_link=True,
             )
-        motion_adapter.gripper_command("CLOSE")
+        if not motion_adapter.gripper_command("CLOSE"):
+            print("[CONTROL] PICK_PLACE_ONLY aborted: failed to close gripper.")
+            return
         if config.VISUALIZER:
             from visualization import record_waypoint_state
 
@@ -385,7 +397,9 @@ class RobotControlSystem:
             )
 
         self._transition("MOVE_TO_PICK_LIFT")
-        self._move_to(pick_lift)
+        if not self._move_to(pick_lift):
+            print("[CONTROL] PICK_PLACE_ONLY aborted: failed to reach pick lift.")
+            return
         if config.VISUALIZER:
             from visualization import record_waypoint_state
 
@@ -399,7 +413,9 @@ class RobotControlSystem:
             )
 
         self._transition("MOVE_TO_PLACE_TRANSFER")
-        self._move_to(place_transfer)
+        if not self._move_to(place_transfer):
+            print("[CONTROL] PICK_PLACE_ONLY aborted: failed to reach place transfer.")
+            return
         if config.VISUALIZER:
             from visualization import record_waypoint_state
 
@@ -413,7 +429,9 @@ class RobotControlSystem:
             )
 
         self._transition("MOVE_TO_PLACE_APPROACH")
-        self._move_to(place_approach)
+        if not self._move_to(place_approach):
+            print("[CONTROL] PICK_PLACE_ONLY aborted: failed to reach place approach.")
+            return
         if config.VISUALIZER:
             from visualization import record_waypoint_state
 
@@ -428,7 +446,9 @@ class RobotControlSystem:
             )
 
         self._transition("MOVE_TO_PLACE_FINAL")
-        self._move_to(place_final)
+        if not self._move_to(place_final):
+            print("[CONTROL] PICK_PLACE_ONLY aborted: failed to reach place final.")
+            return
         if config.VISUALIZER:
             from visualization import record_waypoint_state
 
@@ -440,7 +460,9 @@ class RobotControlSystem:
                 placed_book_visible=False,
                 horizontal_end_link=True,
             )
-        motion_adapter.gripper_command("OPEN")
+        if not motion_adapter.gripper_command("OPEN"):
+            print("[CONTROL] PICK_PLACE_ONLY aborted: failed to open gripper.")
+            return
         if config.VISUALIZER:
             from visualization import record_waypoint_state
 
@@ -454,7 +476,9 @@ class RobotControlSystem:
             )
 
         self._transition("MOVE_TO_PLACE_RETREAT")
-        self._move_to(place_retreat)
+        if not self._move_to(place_retreat):
+            print("[CONTROL] PICK_PLACE_ONLY aborted: failed to reach place retreat.")
+            return
         if config.VISUALIZER:
             from visualization import record_waypoint_state
 

@@ -23,6 +23,8 @@ DEFAULT_SEND_SCRIPT = SIM_OUTPUT_DIR / "send_hardware_sequence.py"
 PICK_APPROACH_CLEARANCE_MM = 100.0
 POST_GRASP_LIFT_MM = 45.0
 TRANSPORT_RETRACT_MM = 70.0
+MIN_TRANSPORT_RADIUS_MM = 170.0
+TRANSPORT_RETRACT_TRIGGER_RADIUS_MM = 240.0
 DEFAULT_RETREAT_Y_MM = 220.0
 DEFAULT_STEP_TIME_MS = 1500
 BASE_ONLY_TIME_MS = 2500
@@ -117,13 +119,16 @@ def build_target_waypoints(
     approach_z = pick_z + PICK_APPROACH_CLEARANCE_MM
     transport_z = pick_z + POST_GRASP_LIFT_MM
     retract_x, retract_y = _retract_xy_toward_origin(pick_x, pick_y, TRANSPORT_RETRACT_MM)
-
-    return [
+    waypoints = [
         TargetWaypoint("pick_approach", pick_x, pick_y, approach_z, False, True, False),
         TargetWaypoint("pick", pick_x, pick_y, pick_z, False, True, False),
         TargetWaypoint("gripper_close_pose", pick_x, pick_y, pick_z, True, False, False),
         TargetWaypoint("pick_lift", pick_x, pick_y, transport_z, True, False, False),
-        TargetWaypoint("transport_retract", retract_x, retract_y, transport_z, True, False, False),
+    ]
+    if (retract_x, retract_y) != (pick_x, pick_y):
+        waypoints.append(TargetWaypoint("transport_retract", retract_x, retract_y, transport_z, True, False, False))
+    waypoints.extend(
+        [
         TargetWaypoint(
             "place_transfer_base_only",
             place_x,
@@ -138,14 +143,19 @@ def build_target_waypoints(
         TargetWaypoint("place_final", place_x, place_y, place_z, True, False, False),
         TargetWaypoint("gripper_open_pose", place_x, place_y, place_z, False, False, True),
         TargetWaypoint("place_retreat", place_x, retreat_y, transport_z, False, False, True),
-    ]
+        ]
+    )
+    return waypoints
 
 
 def _retract_xy_toward_origin(x_mm: float, y_mm: float, distance_mm: float) -> tuple[float, float]:
     radius = math.hypot(x_mm, y_mm)
-    if radius <= 0.0 or distance_mm <= 0.0:
+    if radius <= TRANSPORT_RETRACT_TRIGGER_RADIUS_MM or distance_mm <= 0.0:
         return x_mm, y_mm
-    scale = max(radius - min(distance_mm, radius), 0.0) / radius
+    target_radius = max(radius - min(distance_mm, radius), MIN_TRANSPORT_RADIUS_MM)
+    if target_radius >= radius:
+        return x_mm, y_mm
+    scale = target_radius / radius
     return x_mm * scale, y_mm * scale
 
 
@@ -428,13 +438,15 @@ def build_hardware_commands(
     """Build the verified raw ASCII sequence from solved MuJoCo poses."""
     q_deg = [np_module.rad2deg(q).tolist() for q in q_waypoints]
     pwm_by_waypoint = [pwm_from_mujoco_angles_deg(q) for q in q_deg]
+    waypoint_index_by_label = {waypoint.label: index for index, waypoint in enumerate(waypoints)}
 
     commands: list[str] = []
     metadata: list[CommandMetadata] = []
     previous_arm_pwm: tuple[int, int, int, int, int] | None = None
 
-    def add_arm_step(label: str, waypoint_index: int) -> None:
+    def add_arm_step(label: str) -> None:
         nonlocal previous_arm_pwm
+        waypoint_index = waypoint_index_by_label[label]
         pwm = pwm_by_waypoint[waypoint_index]
         times = _times_for_pwm_delta(pwm, previous_arm_pwm, timing)
         deltas = (
@@ -460,13 +472,15 @@ def build_hardware_commands(
         commands.append(command)
         metadata.append(CommandMetadata(label=label, command=command, note=note))
 
-    add_arm_step("pick_approach", 0)
-    add_arm_step("pick", 1)
+    add_arm_step("pick_approach")
+    add_arm_step("pick")
     add_gripper_step("gripper_close", GRIPPER_CLOSE_COMMAND, "fixed gripper close")
-    add_arm_step("pick_lift", 3)
-    add_arm_step("transport_retract", 4)
+    add_arm_step("pick_lift")
+    if "transport_retract" in waypoint_index_by_label:
+        add_arm_step("transport_retract")
 
-    base_pwm = pwm_by_waypoint[5][0]
+    place_transfer_index = waypoint_index_by_label["place_transfer_base_only"]
+    base_pwm = pwm_by_waypoint[place_transfer_index][0]
     base_previous = previous_arm_pwm[0] if previous_arm_pwm is not None else base_pwm
     base_delta = abs(base_pwm - base_previous)
     base_command = f"{{#000P{base_pwm:04d}T{BASE_ONLY_TIME_MS:04d}!}}"
@@ -481,12 +495,12 @@ def build_hardware_commands(
             note="fixed base-only transfer; joint1-joint5 not re-commanded",
         )
     )
-    previous_arm_pwm = pwm_by_waypoint[5]
+    previous_arm_pwm = pwm_by_waypoint[place_transfer_index]
 
-    add_arm_step("place_approach", 6)
-    add_arm_step("place_final", 7)
+    add_arm_step("place_approach")
+    add_arm_step("place_final")
     add_gripper_step("gripper_open", GRIPPER_OPEN_COMMAND, "fixed safe release")
-    add_arm_step("place_retreat", 9)
+    add_arm_step("place_retreat")
     commands.append(HARDWARE_HOME_COMMAND)
     metadata.append(
         CommandMetadata(
@@ -615,7 +629,7 @@ def generate_target_sequence(
     write_trajectory_csv(waypoints_for_csv, trajectory_path)
     mujoco_waypoints, q_waypoints, np_module = solve_waypoint_angles(trajectory_path)
     commands, command_metadata = build_hardware_commands(
-        mujoco_waypoints,
+        waypoints_for_csv,
         q_waypoints,
         np_module,
         timing,

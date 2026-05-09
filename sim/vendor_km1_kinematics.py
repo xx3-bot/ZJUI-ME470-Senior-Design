@@ -290,7 +290,11 @@ def main() -> None:
     parser.add_argument("--y-range", default="80:460")
     parser.add_argument("--z-range", default="20:520")
     parser.add_argument("--step-mm", type=float, default=20.0)
-    parser.add_argument("--csv", type=Path, default=Path(__file__).resolve().parent / "vendor_ik_grid.csv")
+    parser.add_argument(
+        "--csv",
+        type=Path,
+        default=Path(__file__).resolve().parent / "diagnostics" / "vendor_ik_grid.csv",
+    )
     args = parser.parse_args()
 
     profile = PROFILES[args.profile]
