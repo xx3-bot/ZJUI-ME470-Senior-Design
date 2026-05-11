@@ -51,6 +51,31 @@ Verification on 2026-05-11:
   the snapshot reports `partial`; this is expected in Codex and should be
   re-tested from the user's Terminal where camera access is granted.
 
+### 2026-05-11 post-grasp extract-and-lift update
+
+The target-sequence post-grasp motion has changed from pure vertical lifting to
+extracting the book while lifting.
+
+Current target-sequence policy:
+- `pick_lift` now means post-grasp extract-and-lift.
+- The generator retracts XY toward the arm origin by up to `50 mm`, but never
+  below `170 mm` horizontal radius.
+- The generator lifts to `pick.z + 65 mm`.
+- For the clean test pick `pick=(220, 0, 115)`, this produces
+  `pick_lift=(170, 0, 180)`.
+- If the resulting `pick_lift` radius is still greater than `240 mm`, the older
+  extra `transport_retract` step can still be inserted; otherwise the sequence
+  goes directly from `pick_lift` to the shelf-side base-only transfer.
+
+Verification on 2026-05-11:
+- A temporary feasibility check for `place=(-25,250,124.25)`,
+  `(0,250,124.25)`, and `(25,250,124.25)` passed MuJoCo IK.
+- The formal command
+  `python3 主程序代码/main.py --run-target-sequence --dry-run --wait-trigger none --pick 220 0 115 --place 0 250 124.25`
+  generated `pick_lift=(170,0,180)` and 10 PWM commands.
+- `--grip-place-test` dry-runs for left and right fixed slots also passed IK;
+  camera capture remained partial in Codex due to macOS camera permission.
+
 ### 2026-05-01 control/planning boundary for agents
 
 Do not misclassify the current MuJoCo pick/place demo as a vision planner or

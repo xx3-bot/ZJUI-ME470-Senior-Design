@@ -21,7 +21,9 @@ DEFAULT_SUMMARY_PATH = SIM_OUTPUT_DIR / "TARGET_SEQUENCE_SUMMARY.md"
 DEFAULT_SEND_SCRIPT = SIM_OUTPUT_DIR / "send_hardware_sequence.py"
 
 PICK_APPROACH_CLEARANCE_MM = 100.0
-POST_GRASP_LIFT_MM = 45.0
+POST_GRASP_LIFT_MM = 95.0
+POST_GRASP_RETRACT_MM = 100.0
+MIN_POST_GRASP_RADIUS_MM = 160.0
 TRANSPORT_RETRACT_MM = 70.0
 MIN_TRANSPORT_RADIUS_MM = 170.0
 TRANSPORT_RETRACT_TRIGGER_RADIUS_MM = 240.0
@@ -34,6 +36,7 @@ DEFAULT_SMALL_MOVE_TIME_MS = 400
 DEFAULT_MEDIUM_MOVE_TIME_MS = 800
 DEFAULT_NORMAL_MOVE_TIME_MS = 1500
 GRIPPER_CLOSE_COMMAND = "{#005P1700T1000!}"
+GRIPPER_PRE_OPEN_COMMAND = "{#005P1300T1000!}"
 GRIPPER_OPEN_COMMAND = "{#005P1400T1000!}"
 HARDWARE_HOME_COMMAND = (
     "{#000P1500T1500!#001P2000T1500!#002P2000T1500!"
@@ -118,14 +121,15 @@ def build_target_waypoints(
     place_x, place_y, place_z = place
     approach_z = pick_z + PICK_APPROACH_CLEARANCE_MM
     transport_z = pick_z + POST_GRASP_LIFT_MM
-    retract_x, retract_y = _retract_xy_toward_origin(pick_x, pick_y, TRANSPORT_RETRACT_MM)
+    extract_x, extract_y = _post_grasp_extract_xy(pick_x, pick_y)
+    retract_x, retract_y = _retract_xy_toward_origin(extract_x, extract_y, TRANSPORT_RETRACT_MM)
     waypoints = [
         TargetWaypoint("pick_approach", pick_x, pick_y, approach_z, False, True, False),
         TargetWaypoint("pick", pick_x, pick_y, pick_z, False, True, False),
         TargetWaypoint("gripper_close_pose", pick_x, pick_y, pick_z, True, False, False),
-        TargetWaypoint("pick_lift", pick_x, pick_y, transport_z, True, False, False),
+        TargetWaypoint("pick_lift", extract_x, extract_y, transport_z, True, False, False),
     ]
-    if (retract_x, retract_y) != (pick_x, pick_y):
+    if (retract_x, retract_y) != (extract_x, extract_y):
         waypoints.append(TargetWaypoint("transport_retract", retract_x, retract_y, transport_z, True, False, False))
     waypoints.extend(
         [
@@ -146,6 +150,17 @@ def build_target_waypoints(
         ]
     )
     return waypoints
+
+
+def _post_grasp_extract_xy(x_mm: float, y_mm: float) -> tuple[float, float]:
+    radius = math.hypot(x_mm, y_mm)
+    if radius <= MIN_POST_GRASP_RADIUS_MM or POST_GRASP_RETRACT_MM <= 0.0:
+        return x_mm, y_mm
+    target_radius = max(radius - POST_GRASP_RETRACT_MM, MIN_POST_GRASP_RADIUS_MM)
+    if target_radius >= radius:
+        return x_mm, y_mm
+    scale = target_radius / radius
+    return x_mm * scale, y_mm * scale
 
 
 def _retract_xy_toward_origin(x_mm: float, y_mm: float, distance_mm: float) -> tuple[float, float]:
@@ -473,6 +488,7 @@ def build_hardware_commands(
         metadata.append(CommandMetadata(label=label, command=command, note=note))
 
     add_arm_step("pick_approach")
+    add_gripper_step("gripper_pre_open", GRIPPER_PRE_OPEN_COMMAND, "fixed pre-grasp wide open")
     add_arm_step("pick")
     add_gripper_step("gripper_close", GRIPPER_CLOSE_COMMAND, "fixed gripper close")
     add_arm_step("pick_lift")
@@ -515,19 +531,29 @@ def build_hardware_commands(
 def build_fixed_hardware_commands(waypoints, q_waypoints, np_module) -> list[str]:
     """Build the historical fixed-time command sequence for comparison/debug."""
     q_deg = [np_module.rad2deg(q).tolist() for q in q_waypoints]
+    index_by_label = {waypoint.label: index for index, waypoint in enumerate(waypoints)}
     commands = [
-        arm_command_from_q(q_deg[0]),
-        arm_command_from_q(q_deg[1]),
+        arm_command_from_q(q_deg[index_by_label["pick_approach"]]),
+        arm_command_from_q(q_deg[index_by_label["pick"]]),
         GRIPPER_CLOSE_COMMAND,
-        arm_command_from_q(q_deg[3]),
-        arm_command_from_q(q_deg[4]),
-        arm_command_from_q(q_deg[5], time_ms=BASE_ONLY_TIME_MS, base_only=True),
-        arm_command_from_q(q_deg[6]),
-        arm_command_from_q(q_deg[7]),
-        GRIPPER_OPEN_COMMAND,
-        arm_command_from_q(q_deg[9]),
-        HARDWARE_HOME_COMMAND,
+        arm_command_from_q(q_deg[index_by_label["pick_lift"]]),
     ]
+    if "transport_retract" in index_by_label:
+        commands.append(arm_command_from_q(q_deg[index_by_label["transport_retract"]]))
+    commands.extend(
+        [
+            arm_command_from_q(
+                q_deg[index_by_label["place_transfer_base_only"]],
+                time_ms=BASE_ONLY_TIME_MS,
+                base_only=True,
+            ),
+            arm_command_from_q(q_deg[index_by_label["place_approach"]]),
+            arm_command_from_q(q_deg[index_by_label["place_final"]]),
+            GRIPPER_OPEN_COMMAND,
+            arm_command_from_q(q_deg[index_by_label["place_retreat"]]),
+            HARDWARE_HOME_COMMAND,
+        ]
+    )
     return commands
 
 
@@ -550,17 +576,12 @@ def write_summary(
     rows = []
     q_deg = [np_module.rad2deg(q).tolist() for q in q_waypoints]
     command_by_label = {
-        "pick_approach": commands[0],
-        "pick": commands[1],
-        "gripper_close_pose": commands[2],
-        "pick_lift": commands[3],
-        "transport_retract": commands[4],
-        "place_transfer_base_only": commands[5],
-        "place_approach": commands[6],
-        "place_final": commands[7],
-        "gripper_open_pose": commands[8],
-        "place_retreat": commands[9],
+        item.label: item.command
+        for item in command_metadata
+        if item.label != "measured_hardware_home"
     }
+    command_by_label["gripper_close_pose"] = command_by_label["gripper_close"]
+    command_by_label["gripper_open_pose"] = command_by_label["gripper_open"]
     for index, waypoint in enumerate(waypoints, start=1):
         angles = ", ".join(f"{value:.3f}" for value in q_deg[index - 1])
         rows.append(
@@ -578,8 +599,9 @@ def write_summary(
         f"- pick xyz: `{pick}`",
         f"- place xyz: `{place}`",
         f"- pick approach clearance: `{PICK_APPROACH_CLEARANCE_MM} mm`",
-        f"- post-grasp lift: `{POST_GRASP_LIFT_MM} mm`",
-        f"- transport retract toward origin: `{TRANSPORT_RETRACT_MM} mm`",
+        f"- post-grasp extract lift: `{POST_GRASP_LIFT_MM} mm`",
+        f"- post-grasp extract toward origin: `{POST_GRASP_RETRACT_MM} mm`, minimum radius `{MIN_POST_GRASP_RADIUS_MM} mm`",
+        f"- extra transport retract toward origin: `{TRANSPORT_RETRACT_MM} mm` when radius remains above `{TRANSPORT_RETRACT_TRIGGER_RADIUS_MM} mm`",
         f"- base-only transfer time: `{BASE_ONLY_TIME_MS} ms`",
         (
             "- dynamic arm timing: "
@@ -587,6 +609,7 @@ def write_summary(
             f"`delta < {timing.medium_move_threshold_pwm} PWM -> {timing.medium_move_time_ms} ms`, "
             f"otherwise `{timing.normal_move_time_ms} ms`"
         ),
+        f"- gripper pre-open before pick descent: `{GRIPPER_PRE_OPEN_COMMAND}`",
         f"- gripper close: `{GRIPPER_CLOSE_COMMAND}`",
         f"- gripper open/release: `{GRIPPER_OPEN_COMMAND}`",
         f"- final measured home: `{HARDWARE_HOME_COMMAND}`",

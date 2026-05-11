@@ -21,11 +21,12 @@ The legacy controller still supports its original 11-hyperparameter prompt. If
 that prompt appears, pressing Enter now loads `config.DEFAULT_RUNTIME_PARAMS`
 instead of rejecting the empty input.
 
-The generated target sequence may or may not include a `transport_retract`
-waypoint. It is inserted only when the pick point is far enough from the arm
-base: horizontal radius `> 240 mm`. When inserted, it retracts toward the origin
-but never below `170 mm` radius. For closer picks, the sequence goes directly
-from `pick_lift` to the shelf-side base transfer.
+The generated target sequence now treats `pick_lift` as a post-grasp
+extract-and-lift pose, not a pure vertical lift. It retracts the held book
+toward the arm origin by up to `50 mm`, never below `170 mm` horizontal radius,
+and lifts to `pick.z + 65 mm`. For the clean test pick `(220, 0, 115)`, this
+produces `pick_lift = (170, 0, 180)`. An additional `transport_retract` waypoint
+is inserted only if the post-grasp extract pose still has radius `> 240 mm`.
 
 The intended future standard Auto flow is documented in
 `AUTO_STANDARD_FLOW.md`. That document is for design/team alignment only; the

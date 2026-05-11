@@ -31,15 +31,32 @@ RGB_INTRINSICS_FY_PX: float = 964.73
 RGB_INTRINSICS_CX_PX: float = 609.01
 RGB_INTRINSICS_CY_PX: float = 358.15
 
-# v1 bin scan simplification: control supplies a fixed camera-to-book depth.
-# Vision only converts horizontal pixels to lateral millimeters.
-BIN_FIXED_DEPTH_MM: float = 200.0
+# 相机相对机械臂底座的位置（arm frame, mm）。
+# 坐标约定（2026-05-11 物理验证）：
+#   +X = 机械臂前方（朝 bin）   +Z = 上    +Y = 横向
+# 用户实测：相机装在机械臂上方，前移 80mm，居中（Y=0），高 100mm。
+CAMERA_POSITION_IN_ARM_MM: Tuple[float, float, float] = (80.0, 0.0, 100.0)
 
-# Temporary v1 pickup-coordinate assumptions for bin vision output.
-# Keep these centralized so future startup calibration can replace the values
-# without changing the detection output shape.
-BIN_PICK_DEPTH_MM: float = 200.0
-BIN_PICK_GRASP_HEIGHT_MM: float = 115.0
+# 相机镜头中心相对 arm 中轴的横向偏移（mm）。理想 = 0（居中）。
+CAMERA_Y_OFFSET_MM: float = CAMERA_POSITION_IN_ARM_MM[1]
+
+# 像素 u → arm Y 的方向修正。装机后用照片验证：
+# 把书往 +Y 一侧（左 or 右，取决于物理约定）移 20mm，跑 test_lateral
+# 看输出 +20 还是 -20。一致 = +1，反向 = -1。
+CAMERA_PIXEL_TO_ARM_Y_SIGN: int = -1  # 2026-05-11 实测确认（机械同学 +38 抓书成功）
+
+# 抓握位姿的"定死"参数（机械同学硬编码）：
+#   arm X = BIN_PICK_DEPTH_MM       （机械臂前方深度）
+#   arm Z = BIN_PICK_GRASP_HEIGHT_MM（抓握点高度）
+#   arm Y = 视觉算（lateral_pose_provider.get_book_arm_y_mm）
+BIN_PICK_DEPTH_MM: float = 250.0           # 用户实测：书在 arm-X 250mm 处
+BIN_PICK_GRASP_HEIGHT_MM: float = 115.0    # 抓握高度
+
+# v1 bin scan: 相机到书的 camera-frame 深度（派生）。
+# 公式：book 的 arm X − 相机的 arm X
+# 跟着 BIN_PICK_DEPTH_MM 和 CAMERA_POSITION_IN_ARM_MM 自动更新，
+# 不要单独硬编码这一项。
+BIN_FIXED_DEPTH_MM: float = BIN_PICK_DEPTH_MM - CAMERA_POSITION_IN_ARM_MM[0]  # 250 − 80 = 170
 
 # 相机外参（占位值，装机后实测替换）
 CAMERA_TRANSLATION_MM: Tuple[float, float, float] = (0.0, -400.0, 200.0)
@@ -458,25 +475,28 @@ def get_pick_place_plan() -> PickPlacePlan:
     - `place_final`: release waypoint
     - `place_retreat`: post-release retreat waypoint
 
-    视觉对接路径：
-    - USE_VISION_FOR_PICK=True：调用 vision.world_pose_provider.get_pick_world_pose()
-      用真实/注入的视觉 pose 替换 FIXED_PICK_POSE。识别失败回退到固定值。
+    视觉对接路径（2026-05-11 切到 lateral_pose_provider）：
+    - USE_VISION_FOR_PICK=True：调用 vision.lateral_pose_provider.get_pick_pose_from_camera()
+      返回 (BIN_PICK_DEPTH_MM, arm_y_vision, BIN_PICK_GRASP_HEIGHT_MM)。
+      X/Z 是硬编码常数，Y 是视觉从书脊像素 + 固定深度反投影算出来的。
+      识别失败回退到 FIXED_PICK_POSE。
     - VISION_SHADOW_MODE=True：影子模式——求一次但不替换，仅用于日志验证通路。
+    - 旧的 world_pose_provider（depth-from-pixel-height）已弃用但文件保留。
     """
     pick_pose = FIXED_PICK_POSE
 
     if USE_VISION_FOR_PICK or VISION_SHADOW_MODE:
-        from vision.world_pose_provider import get_pick_world_pose
+        from vision.lateral_pose_provider import get_pick_pose_from_camera
 
         title = KNOWN_BOOK_TITLES[0] if KNOWN_BOOK_TITLES else ""
-        world = get_pick_world_pose(title)
-        if world is not None:
+        vision_pose = get_pick_pose_from_camera(title)
+        if vision_pose is not None:
             print(
-                f"[VISION->PLAN] vision_pick=({world[0]:.1f}, {world[1]:.1f}, {world[2]:.1f}) "
-                f"title={title!r}"
+                f"[VISION->PLAN] vision_pick=({vision_pose[0]:.1f}, "
+                f"{vision_pose[1]:.1f}, {vision_pose[2]:.1f}) title={title!r}"
             )
             if USE_VISION_FOR_PICK:
-                pick_pose = world
+                pick_pose = vision_pose
             else:
                 print("[VISION->PLAN] SHADOW_MODE: keeping FIXED_PICK_POSE")
         else:
