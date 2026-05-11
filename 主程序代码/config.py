@@ -64,8 +64,8 @@ CAMERA_ORIENTATION_MODE: str = "ARM_FACING"
 
 # 已知书目 + 物理尺寸 + OCR 标题文字段物理高度（用于深度反推）
 KNOWN_BOOK_TITLES: List[str] = [
+    "羊皮卷",                              # 当前 demo 默认目标书（bin 里这本）
     "习近平新时代中国特色社会主义思想概论",
-    "羊皮卷",
     "聊斋志异",
     "毛泽东思想概况",
     "人性的弱点",

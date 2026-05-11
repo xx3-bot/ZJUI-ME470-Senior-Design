@@ -590,8 +590,31 @@ def main() -> None:
         return
 
     if args.run_target_sequence:
-        if args.pick is None or args.place is None:
-            parser.error("--run-target-sequence requires --pick X Y Z and --place X Y Z")
+        pick = args.pick
+        # 2026-05-11: 允许 --run-target-sequence + --use-vision-for-pick 组合：
+        # 不带 --pick 时，自动调一次视觉抓帧 + OCR 算 pick_pose。
+        if pick is None and args.use_vision_for_pick:
+            from vision.lateral_pose_provider import get_pick_pose_from_camera
+
+            title = config.KNOWN_BOOK_TITLES[0] if config.KNOWN_BOOK_TITLES else ""
+            vision_pose = get_pick_pose_from_camera(title)
+            if vision_pose is None:
+                parser.error(
+                    "--use-vision-for-pick: 视觉返回 None（相机不可用 / OCR 未命中目标书）。"
+                    "请显式传 --pick X Y Z，或检查 bin 里的书 / 重试。"
+                )
+            print(
+                f"[RUNTIME] Vision-derived pick = "
+                f"({vision_pose[0]:.1f}, {vision_pose[1]:.1f}, {vision_pose[2]:.1f}) mm "
+                f"for title={title!r}",
+                flush=True,
+            )
+            pick = list(vision_pose)
+        if pick is None or args.place is None:
+            parser.error(
+                "--run-target-sequence requires --pick X Y Z and --place X Y Z "
+                "(or --use-vision-for-pick to auto-derive --pick from camera)."
+            )
         print(
             "[RUNTIME] Formal hardware-generation path: generating a fresh "
             "trajectory and command sequence from this run's --pick/--place. "
@@ -614,7 +637,7 @@ def main() -> None:
             normal_move_time_ms=args.normal_move_time_ms,
         )
         result = generate_target_sequence(
-            pick=tuple(args.pick),
+            pick=tuple(pick),
             place=tuple(args.place),
             timing=timing,
         )
