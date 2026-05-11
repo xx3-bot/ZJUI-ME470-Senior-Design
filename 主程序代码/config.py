@@ -31,6 +31,16 @@ RGB_INTRINSICS_FY_PX: float = 964.73
 RGB_INTRINSICS_CX_PX: float = 609.01
 RGB_INTRINSICS_CY_PX: float = 358.15
 
+# v1 bin scan simplification: control supplies a fixed camera-to-book depth.
+# Vision only converts horizontal pixels to lateral millimeters.
+BIN_FIXED_DEPTH_MM: float = 200.0
+
+# Temporary v1 pickup-coordinate assumptions for bin vision output.
+# Keep these centralized so future startup calibration can replace the values
+# without changing the detection output shape.
+BIN_PICK_DEPTH_MM: float = 200.0
+BIN_PICK_GRASP_HEIGHT_MM: float = 115.0
+
 # 相机外参（占位值，装机后实测替换）
 CAMERA_TRANSLATION_MM: Tuple[float, float, float] = (0.0, -400.0, 200.0)
 CAMERA_ORIENTATION_MODE: str = "ARM_FACING"
@@ -39,6 +49,11 @@ CAMERA_ORIENTATION_MODE: str = "ARM_FACING"
 KNOWN_BOOK_TITLES: List[str] = [
     "习近平新时代中国特色社会主义思想概论",
     "羊皮卷",
+    "聊斋志异",
+    "毛泽东思想概况",
+    "人性的弱点",
+    "鬼谷子",
+    "墨菲定律",
 ]
 KNOWN_BOOK_DIMENSIONS_MM: Dict[str, Dict[str, float]] = {
     "习近平新时代中国特色社会主义思想概论": {
@@ -52,6 +67,36 @@ KNOWN_BOOK_DIMENSIONS_MM: Dict[str, Dict[str, float]] = {
         "cover_width":           150.0,
         "thickness":               7.0,
         "ocr_visible_height_mm":  33.0,
+    },
+    "聊斋志异": {
+        "spine_height":          210.0,
+        "cover_width":           150.0,
+        "thickness":              20.0,
+        "ocr_visible_height_mm":  80.0,
+    },
+    "毛泽东思想概况": {
+        "spine_height":          227.0,
+        "cover_width":           150.0,
+        "thickness":              25.0,
+        "ocr_visible_height_mm": 110.0,
+    },
+    "人性的弱点": {
+        "spine_height":          210.0,
+        "cover_width":           150.0,
+        "thickness":              28.0,
+        "ocr_visible_height_mm":  95.0,
+    },
+    "鬼谷子": {
+        "spine_height":          210.0,
+        "cover_width":           150.0,
+        "thickness":              24.0,
+        "ocr_visible_height_mm":  70.0,
+    },
+    "墨菲定律": {
+        "spine_height":          210.0,
+        "cover_width":           150.0,
+        "thickness":              18.0,
+        "ocr_visible_height_mm":  95.0,
     },
 }
 # 全局 fallback：仅给没填 ocr_visible_height_mm 的书用

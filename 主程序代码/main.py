@@ -37,6 +37,10 @@ def _prompt_choice() -> str:
     print("   Run the sim_output backend for feasibility/logging; no hardware commands.")
     print("4. Target viewer")
     print("   Generate pick/place trajectory and open the MuJoCo animation.")
+    print("5. Startup scan")
+    print("   Sweep -90/0/+90 deg, capture three frames, and save a vision snapshot.")
+    print("6. Grip and place test")
+    print("   Capture -90/0 deg only, log OCR, and generate a fixed place dry-run.")
     print("q. Quit")
     print()
     return _read_input("Select mode [2]: ").strip().lower() or "2"
@@ -94,6 +98,16 @@ def _prompt_wait_trigger(default: str = "space") -> str:
         print("Please enter one of: none, space, button.")
 
 
+def _prompt_place_slot(default: str = "center") -> str:
+    choices = {"left", "center", "right"}
+    while True:
+        raw = _read_input(f"Place slot: left / center / right [{default}]: ").strip().lower()
+        value = raw or default
+        if value in choices:
+            return value
+        print("Please enter one of: left, center, right.")
+
+
 def _append_vec3(argv: list[str], flag: str, values: tuple[float, float, float]) -> None:
     argv.append(flag)
     argv.extend(f"{value:g}" for value in values)
@@ -105,7 +119,7 @@ def _interactive_argv() -> list[str]:
         print("Exiting.")
         raise SystemExit(0)
 
-    if choice not in {"1", "2", "3", "4"}:
+    if choice not in {"1", "2", "3", "4", "5", "6"}:
         print("Unknown selection; defaulting to dry run.")
         choice = "2"
 
@@ -144,6 +158,26 @@ def _interactive_argv() -> list[str]:
         _append_vec3(argv, "--place-retreat", place_retreat)
         place_approach = _prompt_vec3("Sim approach point", config.FIXED_PLACE_APPROACH_POSE)
         _append_vec3(argv, "--place-approach", place_approach)
+        return argv
+
+    if choice == "5":
+        argv.append("--startup-scan")
+        argv.extend(["--hardware-port", _prompt_text("Hardware serial port", "/dev/ttyUSB0")])
+        argv.extend(["--hardware-baud", str(_prompt_int("Hardware baud", 115200))])
+        fixed_delay = _prompt_float("Fixed delay after each command, seconds", DEFAULT_INTERACTIVE_FIXED_STEP_DELAY)
+        argv.extend(["--fixed-step-delay", f"{fixed_delay:g}"])
+        settle = _prompt_float("Settle time at each scan angle, seconds", 4.0)
+        argv.extend(["--startup-scan-settle-seconds", f"{settle:g}"])
+        argv.extend(["--wait-trigger", _prompt_wait_trigger("space")])
+        return argv
+
+    if choice == "6":
+        argv.append("--grip-place-test")
+        argv.append("--dry-run")
+        argv.extend(["--grip-place-slot", _prompt_place_slot("center")])
+        settle = _prompt_float("Settle time at each test angle, seconds", 4.0)
+        argv.extend(["--startup-scan-settle-seconds", f"{settle:g}"])
+        argv.extend(["--wait-trigger", _prompt_wait_trigger("none")])
         return argv
 
     argv.append("--target-viewer")
@@ -248,6 +282,44 @@ def main() -> None:
         help="Simulation/debug only: generate a target-sequence trajectory from --pick/--place and open the MuJoCo viewer.",
     )
     parser.add_argument(
+        "--startup-scan",
+        action="store_true",
+        help=(
+            "Run the three-view startup scan workflow. Sends base-only scan commands, "
+            "captures left/center/right frames, returns home, and writes a snapshot JSON."
+        ),
+    )
+    parser.add_argument(
+        "--startup-scan-settle-seconds",
+        type=float,
+        default=4.0,
+        help="Seconds to wait after each startup scan base move before capturing a frame.",
+    )
+    parser.add_argument(
+        "--startup-scan-output-dir",
+        type=Path,
+        help="Optional output root for startup scan snapshots.",
+    )
+    parser.add_argument(
+        "--grip-place-test",
+        action="store_true",
+        help=(
+            "Run the minimal two-view grip/place test. Captures -90 and 0 deg views, "
+            "logs OCR, and generates target_sequence for a fixed test place point."
+        ),
+    )
+    parser.add_argument(
+        "--grip-place-slot",
+        choices=["left", "center", "right"],
+        default="center",
+        help="Fixed place slot used by --grip-place-test.",
+    )
+    parser.add_argument(
+        "--grip-place-output-dir",
+        type=Path,
+        help="Optional output root for grip/place test snapshots.",
+    )
+    parser.add_argument(
         "--pick",
         nargs=3,
         type=float,
@@ -283,8 +355,9 @@ def main() -> None:
         choices=["none", "space", "button"],
         default="space",
         help=(
-            "For --run-target-sequence, wait for a start trigger after command generation. "
-            "Dry-run skips the wait. Current hardware testing uses 'space'; 'button' is reserved."
+            "For --run-target-sequence, --startup-scan, or --grip-place-test, wait for a start trigger "
+            "before sending hardware commands. Dry-run skips the wait. Current "
+            "hardware testing uses 'space'; 'button' is reserved."
         ),
     )
     parser.add_argument(
@@ -320,7 +393,7 @@ def main() -> None:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="For --run-target-sequence, generate and print commands without opening serial.",
+        help="Generate and print commands without opening serial for hardware-oriented paths.",
     )
     parser.add_argument(
         "--use-vision-for-pick",
@@ -389,6 +462,32 @@ def main() -> None:
             "--target-viewer is a simulation/debug viewer path. "
             "Do not combine it with --sim-mode, --viewer, or pick-place-only simulation overrides."
         )
+    if args.startup_scan and (
+        args.run_target_sequence
+        or args.target_viewer
+        or args.grip_place_test
+        or args.startup_calibrate
+        or sim_override_flags
+        or args.pick is not None
+        or args.place is not None
+    ):
+        parser.error(
+            "--startup-scan is an independent startup workflow. "
+            "Do not combine it with target sequence, startup calibration, viewer, sim, --pick, or --place arguments."
+        )
+    if args.grip_place_test and (
+        args.run_target_sequence
+        or args.target_viewer
+        or args.startup_scan
+        or args.startup_calibrate
+        or sim_override_flags
+        or args.pick is not None
+        or args.place is not None
+    ):
+        parser.error(
+            "--grip-place-test is an independent minimal workflow. "
+            "Do not combine it with target sequence, startup scan/calibration, viewer, sim, --pick, or --place arguments."
+        )
 
     # Vision integration flags (apply before sim_mode init / controller import,
     # so config.get_pick_place_plan() sees the right state on first call).
@@ -402,6 +501,46 @@ def main() -> None:
             float(args.fake_vision_pose[1]),
             float(args.fake_vision_pose[2]),
         )
+
+    if args.startup_scan:
+        from startup_scan import DEFAULT_OUTPUT_ROOT, run_startup_scan
+
+        output_root = args.startup_scan_output_dir or DEFAULT_OUTPUT_ROOT
+        run_startup_scan(
+            port=args.hardware_port,
+            baud=args.hardware_baud,
+            fixed_step_delay=args.fixed_step_delay,
+            settle_seconds=args.startup_scan_settle_seconds,
+            wait_trigger=args.wait_trigger,
+            dry_run=args.dry_run,
+            output_root=output_root,
+        )
+        return
+
+    if args.grip_place_test:
+        from grip_place_test import DEFAULT_OUTPUT_ROOT, run_grip_place_test
+        from target_sequence import TimingConfig
+
+        output_root = args.grip_place_output_dir or DEFAULT_OUTPUT_ROOT
+        timing = TimingConfig(
+            small_move_fast_threshold_pwm=args.small_move_fast_threshold_pwm,
+            medium_move_threshold_pwm=args.medium_move_threshold_pwm,
+            small_move_time_ms=args.small_move_time_ms,
+            medium_move_time_ms=args.medium_move_time_ms,
+            normal_move_time_ms=args.normal_move_time_ms,
+        )
+        run_grip_place_test(
+            port=args.hardware_port,
+            baud=args.hardware_baud,
+            fixed_step_delay=args.fixed_step_delay,
+            settle_seconds=args.startup_scan_settle_seconds,
+            wait_trigger=args.wait_trigger,
+            dry_run=True,
+            place_slot=args.grip_place_slot,
+            output_root=output_root,
+            timing=timing,
+        )
+        return
 
     if args.startup_calibrate:
         from vision.camera import CameraError, RGBCamera

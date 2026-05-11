@@ -2,10 +2,10 @@
 
 两套接口：
 
-1. 旧版 fake 常数法（保留兼容 bin_scanner.py 的 shadow logging）
+1. 固定深度 bin 扫描横向换算（兼容 bin_scanner.py）
    - pixel_to_camera_mm(u, v, frame_size)
    - pixel_x_to_mm(u, frame_width)
-   返回的 mm 是用 PIXEL_TO_MM 占位常数算的，不是物理真值。
+   使用 C920e 标定内参 + config.BIN_FIXED_DEPTH_MM，把横向像素转换为毫米。
 
 2. 新版针孔模型（world_pose_provider.py 用）
    - pinhole_pixel_to_camera_mm(u, v, depth_mm)
@@ -34,11 +34,8 @@ import config
 
 
 # ---------------------------------------------------------------------------
-# 旧版 fake 常数法（保留以免破坏 bin_scanner.py）
+# 固定深度 bin 扫描横向换算（保留旧函数名以免破坏 bin_scanner.py）
 # ---------------------------------------------------------------------------
-
-_LEGACY_PIXEL_TO_MM: float = 0.5
-_LEGACY_ASSUMED_BIN_DEPTH_MM: float = 400.0
 
 
 def pixel_to_camera_mm(
@@ -46,19 +43,31 @@ def pixel_to_camera_mm(
     v: float,
     frame_size: Tuple[int, int],
 ) -> Tuple[float, float, float]:
-    """旧 fake 接口：保留以兼容 bin_scanner.py。"""
-    width, height = frame_size
-    cx_px = width / 2.0
-    cy_px = height / 2.0
-    rel_x = (u - cx_px) * _LEGACY_PIXEL_TO_MM
-    rel_z = -(v - cy_px) * _LEGACY_PIXEL_TO_MM
-    rel_y = _LEGACY_ASSUMED_BIN_DEPTH_MM
+    """Bin scan pixel -> camera-relative mm at fixed depth.
+
+    v1 contract: control/config supplies the fixed depth; vision provides
+    lateral position and edges. This replaces the old 0.5 mm/px placeholder
+    without changing bin_scanner's public output shape.
+    """
+    _width, _height = frame_size
+    depth_mm = float(config.BIN_FIXED_DEPTH_MM)
+    fx = float(config.RGB_INTRINSICS_FX_PX)
+    fy = float(config.RGB_INTRINSICS_FY_PX)
+    cx = float(config.RGB_INTRINSICS_CX_PX)
+    cy = float(config.RGB_INTRINSICS_CY_PX)
+    rel_x = (u - cx) * depth_mm / fx
+    rel_z = -(v - cy) * depth_mm / fy
+    rel_y = depth_mm
     return (rel_x, rel_y, rel_z)
 
 
 def pixel_x_to_mm(u: float, frame_width: int) -> float:
-    """旧 fake 接口：保留。"""
-    return (u - frame_width / 2.0) * _LEGACY_PIXEL_TO_MM
+    """Horizontal pixel -> camera-relative lateral mm at fixed bin depth."""
+    _ = frame_width
+    depth_mm = float(config.BIN_FIXED_DEPTH_MM)
+    fx = float(config.RGB_INTRINSICS_FX_PX)
+    cx = float(config.RGB_INTRINSICS_CX_PX)
+    return (u - cx) * depth_mm / fx
 
 
 # ---------------------------------------------------------------------------

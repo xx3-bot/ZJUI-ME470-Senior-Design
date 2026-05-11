@@ -1,6 +1,6 @@
 # AI Handoff Context - ME470 Book Reshelving Project
 
-Last updated: 2026-05-07 (Asia/Shanghai)
+Last updated: 2026-05-11 (Asia/Shanghai)
 
 ## 1. Project Overview
 
@@ -16,6 +16,40 @@ Team context from user:
 - Current ROS2 progress has moved past zero as of 2026-04-30: user has confirmed PWM command sending works on the physical arm, and serial monitoring receives ESP32/controller feedback such as command echoes and `@GroupDone!`.
 
 ## 2. Current Status and Confirmed Direction
+
+### 2026-05-11 grip/place test mode v1
+
+Current-stage integration has a minimal `Grip and place test` mode for checking
+the simplest useful chain before full Auto is ready.
+
+Entry points:
+- Menu option `6. Grip and place test`
+- CLI:
+  `python3 主程序代码/main.py --grip-place-test --dry-run --wait-trigger none`
+
+Behavior:
+- Captures/logs only the `-90 deg` reference view and the `0 deg` bin/OCR view.
+- Does not run the `+90 deg` view.
+- Does not interpret ABCD shelf sections.
+- Logs OCR results if available, but does not use OCR pick coordinates for
+  motion yet.
+- Generates a fresh `target_sequence` with fixed v1 coordinates:
+  - `pick = (220, 0, 115)`
+  - `left place = (-25, 250, 124.25)`
+  - `center place = (0, 250, 124.25)`
+  - `right place = (25, 250, 124.25)`
+- Writes outputs under `sim_output/grip_place_test/<timestamp>/`, including
+  `left.png`, `center.png`, `grip_place_test_snapshot.json`,
+  `grip_place_test_report.md`, `control_trajectory.csv`,
+  `hardware_command_sequence.txt`, and `TARGET_SEQUENCE_SUMMARY.md`.
+
+Verification on 2026-05-11:
+- `main.py` and `grip_place_test.py` compile.
+- Dry-run checks for `left`, `center`, and `right` slots all generated valid
+  target sequences.
+- Codex-side camera capture still fails due to macOS camera permissions, so
+  the snapshot reports `partial`; this is expected in Codex and should be
+  re-tested from the user's Terminal where camera access is granted.
 
 ### 2026-05-01 control/planning boundary for agents
 
@@ -152,12 +186,19 @@ must never be used as implicit inputs to hardware execution.
 `--sim-mode`, `--viewer`, and `--target-viewer` are simulation/debug paths only.
 `main.py` rejects mixed hardware/simulation flags instead of guessing.
 When `main.py` is run with no CLI arguments, it opens an interactive terminal
-menu with modes 1-4 for hardware send, hardware dry-run, sim mode, and target
-viewer. Pressing Enter at the menu defaults to dry-run; pressing Enter at
+menu with modes 1-5 for hardware send, hardware dry-run, sim mode, target
+viewer, and startup scan. Pressing Enter at the menu defaults to dry-run; pressing Enter at
 parameter prompts keeps the current default values.
 The legacy 11-hyperparameter controller prompt also accepts blank input now and
 loads `config.DEFAULT_RUNTIME_PARAMS`, so the outer menu and the older
 controller setup layer share the same default behavior.
+
+Startup scan v1 is implemented as an independent workflow, not full Auto:
+`--startup-scan` sends base-only `-90 / 0 / +90` scan commands, captures
+`left.png`, `center.png`, and `right.png`, returns home/straight, and writes
+`sim_output/startup_scan/<timestamp>/startup_scan_snapshot.json`. Shelf section
+interpretation is preserved as `pending_or_partial` until the vision/planning
+handoff for A/B/C/D is completed.
 
 Target-sequence transport retract update: `transport_retract` is now conditional
 instead of always inserted. If the pick point horizontal radius is `<= 240 mm`,
@@ -166,6 +207,10 @@ does not add a duplicate/retracted waypoint. If the radius is `> 240 mm`, it
 retracts toward the origin but clamps the resulting radius to at least `170 mm`.
 This avoids creating near-base points such as `[148, 0, 160]` for
 `pick = (218, 0, 115)`, which failed the MuJoCo horizontal-end-link IK check.
+
+Standard Auto flow design is documented in
+`Integrated Algorithm/AUTO_STANDARD_FLOW.md`. This is a design/team-alignment
+document only; the full Auto flow is not implemented yet.
 
 ### Confirmed strategy
 Do **not** rewrite the whole system.

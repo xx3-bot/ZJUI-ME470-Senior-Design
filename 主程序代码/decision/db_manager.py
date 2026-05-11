@@ -18,33 +18,47 @@ class DatabaseManager:
 
     def __init__(self) -> None:
         self.catalog: Dict[str, BookCatalogEntry] = {
-            "Control Systems": BookCatalogEntry(
-                title="Control Systems",
+            "聊斋志异": BookCatalogEntry(
+                title="聊斋志异",
                 zone="A_left",
-                thickness=32.0,
+                thickness=20.0,
                 nominal_height_min=80.0,
                 nominal_height_max=260.0,
             ),
-            "Robotics Dynamics": BookCatalogEntry(
-                title="Robotics Dynamics",
+            "羊皮卷": BookCatalogEntry(
+                title="羊皮卷",
                 zone="A_right",
+                thickness=7.0,
+                nominal_height_min=80.0,
+                nominal_height_max=260.0,
+            ),
+            "毛泽东思想概况": BookCatalogEntry(
+                title="毛泽东思想概况",
+                zone="B_left",
+                thickness=25.0,
+                nominal_height_min=80.0,
+                nominal_height_max=260.0,
+            ),
+            "人性的弱点": BookCatalogEntry(
+                title="人性的弱点",
+                zone="B_right",
                 thickness=28.0,
                 nominal_height_min=80.0,
                 nominal_height_max=260.0,
             ),
-            "Microcontrollers": BookCatalogEntry(
-                title="Microcontrollers",
-                zone="B_left",
+            "鬼谷子": BookCatalogEntry(
+                title="鬼谷子",
+                zone="C_left",
                 thickness=24.0,
-                nominal_height_min=320.0,
-                nominal_height_max=520.0,
+                nominal_height_min=80.0,
+                nominal_height_max=260.0,
             ),
-            "Signals and Systems": BookCatalogEntry(
-                title="Signals and Systems",
-                zone="B_right",
-                thickness=30.0,
-                nominal_height_min=320.0,
-                nominal_height_max=520.0,
+            "墨菲定律": BookCatalogEntry(
+                title="墨菲定律",
+                zone="C_right",
+                thickness=18.0,
+                nominal_height_min=80.0,
+                nominal_height_max=260.0,
             ),
         }
         self.tasks: Dict[str, Task] = {}

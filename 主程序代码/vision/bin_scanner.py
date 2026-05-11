@@ -18,6 +18,7 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
+import config
 from models import Pose
 
 from .camera import CameraError, RGBCamera
@@ -33,9 +34,24 @@ def _grab_frame() -> Optional[np.ndarray]:
         return None
 
 
+def _compose_pick_point(rel_x: float) -> Dict[str, float | str]:
+    """Build the v1 candidate pick point from lateral vision output.
+
+    The current y/z assignments are temporary fixed values. Keep this as a
+    single handoff point so startup calibration can later replace them without
+    changing the output shape consumed by planning/control.
+    """
+    return {
+        "x": float(rel_x),
+        "y": float(config.BIN_PICK_DEPTH_MM),
+        "z": float(config.BIN_PICK_GRASP_HEIGHT_MM),
+        "source": "fixed_bin_pick_v1",
+    }
+
+
 def _hit_to_book_dict(
     hit: SpineHit, frame_size: Tuple[int, int]
-) -> Dict[str, float]:
+) -> Dict[str, object]:
     x1, y1, x2, y2 = hit.bbox
     cx = (x1 + x2) / 2.0
     cy = (y1 + y2) / 2.0
@@ -43,6 +59,7 @@ def _hit_to_book_dict(
     left_edge = pixel_x_to_mm(float(x1), frame_size[0])
     right_edge = pixel_x_to_mm(float(x2), frame_size[0])
     confidence = max(0.0, min(1.0, hit.ocr_score))
+    pick_point = _compose_pick_point(float(rel_x))
     return {
         "title": hit.matched_title,
         "rel_x": float(rel_x),
@@ -51,11 +68,12 @@ def _hit_to_book_dict(
         "left_edge": float(left_edge),
         "right_edge": float(right_edge),
         "depth": float(rel_y),
+        "pick_point": pick_point,
         "confidence": float(confidence),
     }
 
 
-def detect_books_in_frame(frame: np.ndarray) -> List[Dict[str, float]]:
+def detect_books_in_frame(frame: np.ndarray) -> List[Dict[str, object]]:
     """对一帧图像跑 SpineDetector 并拼出主控期望的 dict 列表。"""
     detector = SpineDetector.instance()
     hits = detector.detect(frame)
@@ -65,7 +83,7 @@ def detect_books_in_frame(frame: np.ndarray) -> List[Dict[str, float]]:
     return [_hit_to_book_dict(hit, (w, h)) for hit in hits]
 
 
-def scan_bin_books(camera_pose: Pose) -> List[Dict[str, float]]:
+def scan_bin_books(camera_pose: Pose) -> List[Dict[str, object]]:
     """扫描书框：OCR-first 流水线。"""
     frame = _grab_frame()
     if frame is None:
@@ -78,7 +96,7 @@ def scan_bin_books(camera_pose: Pose) -> List[Dict[str, float]]:
     return books
 
 
-def locate_book(title: str, camera_pose: Pose) -> Optional[Dict[str, float]]:
+def locate_book(title: str, camera_pose: Pose) -> Optional[Dict[str, object]]:
     """精定位某一本目标书；返回最匹配的一条，没找到返回 None。"""
     frame = _grab_frame()
     if frame is None:

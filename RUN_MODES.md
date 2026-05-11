@@ -10,6 +10,8 @@ terminal menu:
 2. Dry run hardware path
 3. Simulation mode
 4. Target viewer
+5. Startup scan
+6. Grip and place test
 ```
 
 After choosing a number, press Enter at any prompt to use the current default
@@ -24,6 +26,61 @@ waypoint. It is inserted only when the pick point is far enough from the arm
 base: horizontal radius `> 240 mm`. When inserted, it retracts toward the origin
 but never below `170 mm` radius. For closer picks, the sequence goes directly
 from `pick_lift` to the shelf-side base transfer.
+
+The intended future standard Auto flow is documented in
+`AUTO_STANDARD_FLOW.md`. That document is for design/team alignment only; the
+full Auto flow is not implemented yet.
+
+## Startup Scan
+
+Use this to collect the first three-view world-model input snapshot without
+running a pick/place task:
+
+```bash
+python3 主程序代码/main.py --startup-scan --dry-run --wait-trigger none
+```
+
+For hardware testing, remove `--dry-run` after checking the command preview and
+serial port. The workflow sends base-only scan commands for `-90 / 0 / +90`
+degrees, captures `left.png`, `center.png`, and `right.png`, then sends the
+documented home/straight command. Each run writes a timestamped snapshot under
+`sim_output/startup_scan/`.
+
+This path is independent from `--run-target-sequence`, `--target-viewer`, and
+`--sim-mode`.
+
+## Grip and Place Test
+
+Use this current-stage test before the full Auto workflow is ready. It only
+activates the `-90 deg` reference view and the `0 deg` bin/OCR view, then
+generates a fixed-place target sequence:
+
+```bash
+python3 主程序代码/main.py \
+  --grip-place-test \
+  --dry-run \
+  --wait-trigger none
+```
+
+Slot choices:
+
+```bash
+python3 主程序代码/main.py --grip-place-test --dry-run --wait-trigger none --grip-place-slot left
+python3 主程序代码/main.py --grip-place-test --dry-run --wait-trigger none --grip-place-slot center
+python3 主程序代码/main.py --grip-place-test --dry-run --wait-trigger none --grip-place-slot right
+```
+
+Fixed v1 coordinates:
+
+- `pick = (220, 0, 115)`
+- `left place = (-25, 250, 124.25)`
+- `center place = (0, 250, 124.25)`
+- `right place = (25, 250, 124.25)`
+
+This mode logs OCR output if the camera works, but it does not use the OCR
+pick point to drive the arm yet. It does not run the `+90 deg` scan and does
+not interpret ABCD shelf sections. Each run writes a timestamped snapshot under
+`sim_output/grip_place_test/`.
 
 ## Formal Hardware-Generation Path
 
