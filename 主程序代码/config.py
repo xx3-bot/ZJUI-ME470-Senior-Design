@@ -21,7 +21,7 @@ USE_VISION_FOR_PICK: bool = False
 VISION_SHADOW_MODE: bool = False
 FAKE_VISION_PICK_POSE: Tuple[float, float, float] | None = None
 
-RGB_CAMERA_INDEX: int = 0
+RGB_CAMERA_INDEX: int | str = 0
 RGB_FRAME_WIDTH: int = 1280
 RGB_FRAME_HEIGHT: int = 720
 

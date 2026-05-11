@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 import cv2
 import numpy as np
@@ -153,6 +153,85 @@ def get_book_pick_pose(
     pose = (arm_x, arm_y, arm_z)
     print(f"[LATERAL] pick_pose = ({pose[0]:+.1f}, {pose[1]:+.1f}, {pose[2]:+.1f}) mm")
     return pose
+
+
+def _hit_to_arm_y_mm(hit: "SpineHit") -> float:
+    u_pixel, v_pixel = _bbox_center(hit)
+    depth_mm = float(config.BIN_FIXED_DEPTH_MM)
+    cam_y_offset_mm = float(config.CAMERA_Y_OFFSET_MM)
+    sign = int(config.CAMERA_PIXEL_TO_ARM_Y_SIGN)
+    cam_frame_y_mm = _pixel_to_camera_frame_y_mm(u_pixel, v_pixel, depth_mm)
+    arm_y_mm = sign * cam_frame_y_mm + cam_y_offset_mm
+    print(
+        f"[LATERAL] {hit.matched_title!r} bbox={hit.bbox} u={u_pixel:.1f} v={v_pixel:.1f} "
+        f"score={hit.ocr_score:.2f} | Z_cam={depth_mm:.0f}mm "
+        f"cam_y={cam_frame_y_mm:+.1f}mm sign={sign:+d} "
+        f"offset={cam_y_offset_mm:+.1f}mm → arm_y={arm_y_mm:+.1f}mm"
+    )
+    return arm_y_mm
+
+
+def get_all_book_pick_poses_from_frame(frame: np.ndarray) -> List[Dict[str, object]]:
+    """Detect every known book in one frame and return ordered pick candidates.
+
+    Ordering follows config.KNOWN_BOOK_TITLES. If the same title appears more
+    than once, candidates for that title are ordered left-to-right in image
+    space as a stable tie-breaker.
+    """
+    from .spine_detector import SpineDetector
+
+    if frame is None or frame.size == 0:
+        print("[LATERAL] 空帧")
+        return []
+
+    hits = SpineDetector.instance().detect(frame)
+    if not hits:
+        print("[LATERAL] 本帧没有命中任何 KNOWN_BOOK_TITLES")
+        return []
+
+    title_order = {title: index for index, title in enumerate(config.KNOWN_BOOK_TITLES)}
+    ordered_hits = sorted(
+        hits,
+        key=lambda hit: (
+            title_order.get(hit.matched_title, len(title_order)),
+            _bbox_center(hit)[0],
+            -hit.ocr_score,
+        ),
+    )
+
+    candidates: List[Dict[str, object]] = []
+    for hit in ordered_hits:
+        arm_y = _hit_to_arm_y_mm(hit)
+        pose = (
+            float(config.BIN_PICK_DEPTH_MM),
+            float(arm_y),
+            float(config.BIN_PICK_GRASP_HEIGHT_MM),
+        )
+        print(
+            f"[LATERAL] loop candidate: {hit.matched_title!r} "
+            f"pick=({pose[0]:+.1f}, {pose[1]:+.1f}, {pose[2]:+.1f}) mm"
+        )
+        candidates.append(
+            {
+                "title": hit.matched_title,
+                "pick": pose,
+                "confidence": float(hit.ocr_score),
+                "bbox": hit.bbox,
+            }
+        )
+    return candidates
+
+
+def get_all_book_pick_poses_from_camera() -> List[Dict[str, object]]:
+    """Realtime loop entry: capture one frame and return all ordered pick poses."""
+    from .camera import CameraError, RGBCamera
+
+    try:
+        frame = RGBCamera.instance().read_frame()
+    except CameraError as exc:
+        print(f"[LATERAL] 相机不可用: {exc}")
+        return []
+    return get_all_book_pick_poses_from_frame(frame)
 
 
 def _fake_pose_if_set() -> Optional[Tuple[float, float, float]]:

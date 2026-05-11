@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -44,10 +45,19 @@ _DEFAULT_JSON = Path(__file__).resolve().parent / "intrinsics_calibration.json"
 
 
 def _open_camera() -> cv2.VideoCapture:
-    cap = cv2.VideoCapture(config.RGB_CAMERA_INDEX)
+    from .camera import probe_camera_indices
+
+    camera_index = os.environ.get("ME470_RGB_CAMERA_INDEX", config.RGB_CAMERA_INDEX)
+    if str(camera_index).lower() == "auto":
+        candidates = probe_camera_indices()
+        if not candidates:
+            raise RuntimeError("无法自动检测到可读相机。检查 C920e 是否连接。")
+        camera_index = candidates[0][0]
+        print(f"[CAL] Auto-selected camera index {camera_index}")
+    cap = cv2.VideoCapture(int(camera_index))
     if not cap.isOpened():
         raise RuntimeError(
-            f"无法打开摄像头 index={config.RGB_CAMERA_INDEX}。检查 C920e 是否连接。"
+            f"无法打开摄像头 index={camera_index}。检查 C920e 是否连接。"
         )
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.RGB_FRAME_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.RGB_FRAME_HEIGHT)

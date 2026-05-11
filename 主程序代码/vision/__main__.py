@@ -1,6 +1,6 @@
 """L2 实时相机验证：python -m vision
 
-打开 iPhone 相机（config.RGB_CAMERA_INDEX）。三条线程：
+打开 RGB 相机（config.RGB_CAMERA_INDEX）。三条线程：
 - _FrameReader：循环读相机，把缓冲一直抽干，存最新一帧
 - _AsyncSpineDetector：拿 worker 自取最新帧跑 OCR，结果回写
 - 主线程：取最新帧 + 最新 hits → 画 → cv2.imshow

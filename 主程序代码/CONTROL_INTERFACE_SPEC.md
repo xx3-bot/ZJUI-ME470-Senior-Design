@@ -196,11 +196,12 @@ scan_shelves(camera_pose: Pose) -> list[dict]
 ```text
 pick_approach   = (x, y, z)  # 抓握点正上方，同 X/Y，更高 Z
 pick             = (x, y, z)  # 书脊/左侧边抓握标志点，不是书本中心
-pick_lift        = (x, y, z)  # 夹住书后回抽+抬升：朝原点最多回抽 50 mm，最低半径 170 mm，Z + 65 mm
+pick_lift        = (x, y, z)  # 夹住书后回抽+抬升：朝原点最多回抽 100 mm，最低半径 160 mm，Z + 95 mm
 transport_retract = (x, y, z) # 若回抽后仍很远，再额外向原点水平回收 70 mm 的运输姿态
 place_transfer   = (x, y, z)  # 带书侧转到书架附近高位
 place_approach   = (x, y, z)  # 高位向书架内推进点，通常接近 final 的 X/Y
 place_final      = (x, y, z)  # 从 approach 往下放后的水平末端释放点
+left_wall_wrist_roll = servo004-only  # 左侧靠墙：释放前手腕左旋，默认 7.5 deg
 place_retreat    = (x, y, z)  # 释放后退开点
 ```
 
@@ -221,9 +222,10 @@ python3 主程序代码/main.py --viewer \
 
 - 视觉算法输出 `pick`：书脊/左侧边的抓握点。
 - 抓取规划输出 `pick_approach`：默认可取 `pick.x/pick.y` 不变，`pick.z + 100 mm`。
-- 抓取规划输出 `pick_lift`：当前 target-sequence 不再原地竖直抬升，而是朝原点最多回抽 `50 mm`，最低保留 `170 mm` 半径，同时抬到 `pick.z + 65 mm`。例如 `pick=(220,0,115)` 会生成 `pick_lift=(170,0,180)`。
+- 抓取规划输出 `pick_lift`：当前 target-sequence 不再原地竖直抬升，而是朝原点最多回抽 `100 mm`，最低保留 `160 mm` 半径，同时抬到 `pick.z + 95 mm`。例如 `pick=(220,0,115)` 会生成 `pick_lift=(160,0,210)`。
 - 控制策略派生 `transport_retract`：如果 `pick_lift` 后水平半径仍大于 `240 mm`，保持 `pick_lift.z`，再沿 XY 平面向原点额外回收 `70 mm`，但不低于 `170 mm` 半径。
 - 规划算法输出 `place_transfer/place_approach/place_final/place_retreat`。
+- 决策系统可以输出简单放置提示 `left_wall` / `左侧靠墙`。当前控制层会在 `place_final` 后、`OPEN` 前追加 servo004-only wrist roll 左旋 `7.5 deg`，例如 `{#004P1444T0800!}`。
 - 放书顺序应是先高位推进到书架内，再往下放，最后 `OPEN` 松手。
 - `place_final` 必须满足末端水平放书语义。
 - `place_retreat` 必须让夹爪在释放后离开书本，之后才能进入下一步或手动控制。

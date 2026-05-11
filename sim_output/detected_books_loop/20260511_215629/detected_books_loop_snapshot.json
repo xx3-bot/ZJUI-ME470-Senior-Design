@@ -1,0 +1,115 @@
+{
+  "timestamp": "2026-05-11T21:56:29",
+  "status": "sent",
+  "output_dir": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260511_215629",
+  "dry_run": false,
+  "place_start": [
+    0.0,
+    250.0,
+    130.0
+  ],
+  "place_step_mm": 15.0,
+  "known_book_order": [
+    "羊皮卷",
+    "习近平新时代中国特色社会主义思想概论",
+    "聊斋志异",
+    "毛泽东思想概况",
+    "人性的弱点",
+    "鬼谷子",
+    "墨菲定律"
+  ],
+  "tasks": [
+    {
+      "index": 1,
+      "title": "羊皮卷",
+      "confidence": 0.9996926188468933,
+      "bbox": [
+        878,
+        74,
+        935,
+        217
+      ],
+      "pick": [
+        250.0,
+        -52.371165562613825,
+        115.0
+      ],
+      "place": [
+        0.0,
+        250.0,
+        130.0
+      ],
+      "trajectory_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260511_215629/book_01_control_trajectory.csv",
+      "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260511_215629/book_01_hardware_command_sequence.txt",
+      "summary_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260511_215629/book_01_TARGET_SEQUENCE_SUMMARY.md",
+      "command_start": 1,
+      "command_end": 11,
+      "command_count": 11,
+      "intermediate_home_omitted": true
+    },
+    {
+      "index": 2,
+      "title": "鬼谷子",
+      "confidence": 0.8035089075565338,
+      "bbox": [
+        305,
+        72,
+        357,
+        536
+      ],
+      "pick": [
+        250.0,
+        48.98946636101216,
+        115.0
+      ],
+      "place": [
+        15.0,
+        250.0,
+        130.0
+      ],
+      "trajectory_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260511_215629/book_02_control_trajectory.csv",
+      "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260511_215629/book_02_hardware_command_sequence.txt",
+      "summary_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260511_215629/book_02_TARGET_SEQUENCE_SUMMARY.md",
+      "command_start": 12,
+      "command_end": 22,
+      "command_count": 11,
+      "intermediate_home_omitted": true
+    },
+    {
+      "index": 3,
+      "title": "墨菲定律",
+      "confidence": 0.9970006942749023,
+      "bbox": [
+        588,
+        76,
+        643,
+        316
+      ],
+      "pick": [
+        250.0,
+        -1.143382171603408,
+        115.0
+      ],
+      "place": [
+        30.0,
+        250.0,
+        130.0
+      ],
+      "trajectory_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260511_215629/book_03_control_trajectory.csv",
+      "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260511_215629/book_03_hardware_command_sequence.txt",
+      "summary_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260511_215629/book_03_TARGET_SEQUENCE_SUMMARY.md",
+      "command_start": 23,
+      "command_end": 34,
+      "command_count": 12,
+      "intermediate_home_omitted": false
+    }
+  ],
+  "combined_command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260511_215629/loop_hardware_command_sequence.txt",
+  "combined_command_count": 34,
+  "errors": [],
+  "notes": [
+    "Detected books are ordered by config.KNOWN_BOOK_TITLES.",
+    "Placement starts at --place and shifts along +X by loop_place_step_mm.",
+    "Intermediate per-book home commands are omitted; final book keeps measured home."
+  ]
+}

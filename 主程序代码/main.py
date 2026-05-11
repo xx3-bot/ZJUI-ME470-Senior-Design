@@ -3,15 +3,73 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
+import json
 from pathlib import Path
 import sys
 
 import config
+from hardware_port import AUTO_PORT
 
 
 DEFAULT_HARDWARE_PICK = (218.0, 120.23, 115.0)
 DEFAULT_HARDWARE_PLACE = (-40.0, 260.0, 124.25)
 DEFAULT_INTERACTIVE_FIXED_STEP_DELAY = 2.5
+
+
+def _now_stamp() -> str:
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def _write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def _build_loop_report(snapshot: dict) -> str:
+    lines = [
+        "# Detected Books Loop Report",
+        "",
+        f"Status: {snapshot.get('status')}",
+        f"Timestamp: {snapshot.get('timestamp')}",
+        f"Output directory: {snapshot.get('output_dir')}",
+        f"Dry run: {snapshot.get('dry_run')}",
+        f"Command file: {snapshot.get('combined_command_path')}",
+        f"Command count: {snapshot.get('combined_command_count')}",
+        "",
+        "## Task Order",
+    ]
+    tasks = snapshot.get("tasks", [])
+    if not tasks:
+        lines.append("No tasks were generated.")
+    for task in tasks:
+        lines.append(
+            f"{task['index']}. {task['title']} "
+            f"confidence={task['confidence']:.2f} "
+            f"pick={tuple(task['pick'])} place={tuple(task['place'])} "
+            f"commands={task['command_count']}"
+        )
+    lines.extend(["", "## Notes"])
+    for note in snapshot.get("notes", []):
+        lines.append(f"- {note}")
+    if snapshot.get("errors"):
+        lines.extend(["", "## Errors"])
+        for error in snapshot["errors"]:
+            lines.append(f"- {error}")
+    return "\n".join(lines) + "\n"
+
+
+def _print_report(title: str, report: str) -> None:
+    print()
+    print(f"===== {title} =====")
+    print(report.rstrip())
+    print(f"===== end {title} =====")
+    print()
 
 
 def _format_vec(values: tuple[float, float, float]) -> str:
@@ -132,7 +190,7 @@ def _interactive_argv() -> list[str]:
 
     if choice == "1":
         argv.append("--run-target-sequence")
-        argv.extend(["--hardware-port", _prompt_text("Hardware serial port", "/dev/ttyUSB0")])
+        argv.extend(["--hardware-port", _prompt_text("Hardware serial port", AUTO_PORT)])
         argv.extend(["--hardware-baud", str(_prompt_int("Hardware baud", 115200))])
         fixed_delay = _prompt_float("Fixed delay after each command, seconds", DEFAULT_INTERACTIVE_FIXED_STEP_DELAY)
         argv.extend(["--fixed-step-delay", f"{fixed_delay:g}"])
@@ -162,7 +220,7 @@ def _interactive_argv() -> list[str]:
 
     if choice == "5":
         argv.append("--startup-scan")
-        argv.extend(["--hardware-port", _prompt_text("Hardware serial port", "/dev/ttyUSB0")])
+        argv.extend(["--hardware-port", _prompt_text("Hardware serial port", AUTO_PORT)])
         argv.extend(["--hardware-baud", str(_prompt_int("Hardware baud", 115200))])
         fixed_delay = _prompt_float("Fixed delay after each command, seconds", DEFAULT_INTERACTIVE_FIXED_STEP_DELAY)
         argv.extend(["--fixed-step-delay", f"{fixed_delay:g}"])
@@ -277,6 +335,15 @@ def main() -> None:
         help="Formal hardware path: generate a fresh pick/place command sequence from --pick/--place and optionally send it.",
     )
     parser.add_argument(
+        "--run-detected-books-loop",
+        action="store_true",
+        help=(
+            "Detect all known books in the current camera frame, order them by "
+            "config.KNOWN_BOOK_TITLES, then run one pick/place sequence per book. "
+            "Uses --place as the first placement point, then steps right in X."
+        ),
+    )
+    parser.add_argument(
         "--target-viewer",
         action="store_true",
         help="Simulation/debug only: generate a target-sequence trajectory from --pick/--place and open the MuJoCo viewer.",
@@ -335,8 +402,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--hardware-port",
-        default="/dev/ttyUSB0",
-        help="Serial port used by --run-target-sequence when not in --dry-run.",
+        default=AUTO_PORT,
+        help="Serial port used by hardware paths. Use 'auto' to detect the arm controller.",
     )
     parser.add_argument(
         "--hardware-baud",
@@ -396,10 +463,25 @@ def main() -> None:
         help="Generate and print commands without opening serial for hardware-oriented paths.",
     )
     parser.add_argument(
+        "--max-loop-books",
+        type=int,
+        default=None,
+        help="Optional cap for --run-detected-books-loop during testing.",
+    )
+    parser.add_argument(
+        "--loop-place-step-mm",
+        type=float,
+        default=15.0,
+        help=(
+            "For --run-detected-books-loop, shift each next placement point to "
+            "the right by this many millimeters along +X."
+        ),
+    )
+    parser.add_argument(
         "--use-vision-for-pick",
         action="store_true",
         help=(
-            "Replace FIXED_PICK_POSE with vision.world_pose_provider output. "
+            "Replace FIXED_PICK_POSE with vision.lateral_pose_provider output. "
             "Requires camera + PaddleOCR available. Falls back to FIXED_PICK_POSE "
             "if vision returns None."
         ),
@@ -419,7 +501,7 @@ def main() -> None:
         type=float,
         metavar=("X", "Y", "Z"),
         help=(
-            "Inject a fixed pose into vision.world_pose_provider.get_pick_world_pose. "
+            "Inject a fixed pose into the vision pick provider. "
             "Used to verify the PickPlacePlan wiring without exercising the real camera/OCR."
         ),
     )
@@ -452,11 +534,28 @@ def main() -> None:
         or args.sim_log_path is not None
     )
 
-    if args.run_target_sequence and (args.target_viewer or sim_override_flags):
+    if args.run_target_sequence and (args.target_viewer or args.run_detected_books_loop or sim_override_flags):
         parser.error(
             "--run-target-sequence is the formal hardware-generation path. "
-            "Do not combine it with --sim-mode, --viewer, --target-viewer, or simulation waypoint overrides."
+            "Do not combine it with --sim-mode, --viewer, --target-viewer, "
+            "--run-detected-books-loop, or simulation waypoint overrides."
         )
+    if args.run_detected_books_loop and (
+        args.target_viewer
+        or args.startup_scan
+        or args.grip_place_test
+        or args.startup_calibrate
+        or sim_override_flags
+        or args.pick is not None
+    ):
+        parser.error(
+            "--run-detected-books-loop is an independent hardware-generation path. "
+            "Do not combine it with viewer/sim/startup/grip-place workflows or --pick."
+        )
+    if args.max_loop_books is not None and args.max_loop_books <= 0:
+        parser.error("--max-loop-books must be positive when provided.")
+    if args.loop_place_step_mm < 0:
+        parser.error("--loop-place-step-mm must be non-negative.")
     if args.target_viewer and sim_override_flags:
         parser.error(
             "--target-viewer is a simulation/debug viewer path. "
@@ -464,6 +563,7 @@ def main() -> None:
         )
     if args.startup_scan and (
         args.run_target_sequence
+        or args.run_detected_books_loop
         or args.target_viewer
         or args.grip_place_test
         or args.startup_calibrate
@@ -477,6 +577,7 @@ def main() -> None:
         )
     if args.grip_place_test and (
         args.run_target_sequence
+        or args.run_detected_books_loop
         or args.target_viewer
         or args.startup_scan
         or args.startup_calibrate
@@ -561,6 +662,162 @@ def main() -> None:
             print("[CAL] 启动校准失败，请检查 AprilTag 是否被遮挡或贴反")
             return
         print("[CAL] 启动校准完成")
+
+    if args.run_detected_books_loop:
+        if args.place is None:
+            parser.error("--run-detected-books-loop requires --place X Y Z")
+        print(
+            "[RUNTIME] Detected-books loop path: detecting all known books in "
+            "one camera frame, ordering by config.KNOWN_BOOK_TITLES. "
+            "The first book uses --place; each next book shifts +X by "
+            f"{args.loop_place_step_mm:g} mm.",
+            flush=True,
+        )
+        from target_sequence import (
+            HARDWARE_HOME_COMMAND,
+            ROOT,
+            TimingConfig,
+            generate_target_sequence,
+            print_command_preview,
+            send_hardware_sequence,
+            wait_for_start_trigger,
+            write_command_file,
+        )
+        from vision.lateral_pose_provider import get_all_book_pick_poses_from_camera
+
+        output_dir = ROOT / "sim_output" / "detected_books_loop" / _now_stamp()
+        snapshot_path = output_dir / "detected_books_loop_snapshot.json"
+        report_path = output_dir / "detected_books_loop_report.md"
+        loop_command_path = output_dir / "loop_hardware_command_sequence.txt"
+        snapshot = {
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "status": "partial",
+            "output_dir": str(output_dir),
+            "dry_run": bool(args.dry_run),
+            "place_start": [float(value) for value in args.place],
+            "place_step_mm": float(args.loop_place_step_mm),
+            "known_book_order": list(config.KNOWN_BOOK_TITLES),
+            "tasks": [],
+            "combined_command_path": str(loop_command_path),
+            "combined_command_count": 0,
+            "errors": [],
+            "notes": [
+                "Detected books are ordered by config.KNOWN_BOOK_TITLES.",
+                "Placement starts at --place and shifts along +X by loop_place_step_mm.",
+                "Intermediate per-book home commands are omitted; final book keeps measured home.",
+            ],
+        }
+
+        candidates = get_all_book_pick_poses_from_camera()
+        if args.max_loop_books is not None:
+            candidates = candidates[: args.max_loop_books]
+        if not candidates:
+            snapshot["errors"].append("no known books detected")
+            _write_json(snapshot_path, snapshot)
+            report = _build_loop_report(snapshot)
+            _write_text(report_path, report)
+            _print_report("Detected Books Loop Report", report)
+            print(f"[LOOP] Snapshot: {snapshot_path}")
+            print(f"[LOOP] Report:   {report_path}")
+            parser.error("--run-detected-books-loop: 没有检测到任何可抓取的已知书。")
+
+        print("[RUNTIME] Loop candidates:")
+        for index, candidate in enumerate(candidates, start=1):
+            pick_pose = candidate["pick"]
+            place_pose = (
+                float(args.place[0]) + (index - 1) * args.loop_place_step_mm,
+                float(args.place[1]),
+                float(args.place[2]),
+            )
+            print(
+                f"  {index:02d}. {candidate['title']!r} "
+                f"pick=({pick_pose[0]:.1f}, {pick_pose[1]:.1f}, {pick_pose[2]:.1f}) "
+                f"place=({place_pose[0]:.1f}, {place_pose[1]:.1f}, {place_pose[2]:.1f}) "
+                f"confidence={float(candidate['confidence']):.2f}"
+            )
+
+        timing = TimingConfig(
+            small_move_fast_threshold_pwm=args.small_move_fast_threshold_pwm,
+            medium_move_threshold_pwm=args.medium_move_threshold_pwm,
+            small_move_time_ms=args.small_move_time_ms,
+            medium_move_time_ms=args.medium_move_time_ms,
+            normal_move_time_ms=args.normal_move_time_ms,
+        )
+        combined_commands: list[str] = []
+        for index, candidate in enumerate(candidates, start=1):
+            pick_pose = tuple(candidate["pick"])
+            place_pose = (
+                float(args.place[0]) + (index - 1) * args.loop_place_step_mm,
+                float(args.place[1]),
+                float(args.place[2]),
+            )
+            print(
+                f"[LOOP] {index}/{len(candidates)}: generating sequence for "
+                f"{candidate['title']!r} pick=({pick_pose[0]:.1f}, "
+                f"{pick_pose[1]:.1f}, {pick_pose[2]:.1f}) "
+                f"place=({place_pose[0]:.1f}, {place_pose[1]:.1f}, {place_pose[2]:.1f})",
+                flush=True,
+            )
+            result = generate_target_sequence(
+                pick=pick_pose,
+                place=place_pose,
+                timing=timing,
+                trajectory_path=output_dir / f"book_{index:02d}_control_trajectory.csv",
+                command_path=output_dir / f"book_{index:02d}_hardware_command_sequence.txt",
+                summary_path=output_dir / f"book_{index:02d}_TARGET_SEQUENCE_SUMMARY.md",
+            )
+            print_command_preview(result)
+            commands = list(result.commands)
+            if index < len(candidates) and commands and commands[-1] == HARDWARE_HOME_COMMAND:
+                commands = commands[:-1]
+            command_start = len(combined_commands) + 1
+            combined_commands.extend(commands)
+            command_end = len(combined_commands)
+            snapshot["tasks"].append(
+                {
+                    "index": index,
+                    "title": str(candidate["title"]),
+                    "confidence": float(candidate["confidence"]),
+                    "bbox": list(candidate["bbox"]),
+                    "pick": [float(value) for value in pick_pose],
+                    "place": [float(value) for value in place_pose],
+                    "trajectory_path": str(result.trajectory_path),
+                    "command_path": str(result.command_path),
+                    "summary_path": str(result.summary_path),
+                    "command_start": command_start,
+                    "command_end": command_end,
+                    "command_count": len(commands),
+                    "intermediate_home_omitted": index < len(candidates),
+                }
+            )
+
+        write_command_file(combined_commands, loop_command_path)
+        snapshot["combined_command_count"] = len(combined_commands)
+        snapshot["status"] = "prepared"
+        _write_json(snapshot_path, snapshot)
+        report = _build_loop_report(snapshot)
+        _write_text(report_path, report)
+        print(
+            f"[LOOP] Combined command sequence: {loop_command_path} "
+            f"({len(combined_commands)} commands for {len(candidates)} book(s))",
+            flush=True,
+        )
+        print(f"[LOOP] Snapshot: {snapshot_path}")
+        print(f"[LOOP] Report:   {report_path}")
+        wait_for_start_trigger(args.wait_trigger, dry_run=args.dry_run)
+        send_hardware_sequence(
+            command_path=loop_command_path,
+            port=args.hardware_port,
+            baud=args.hardware_baud,
+            fixed_step_delay=args.fixed_step_delay,
+            dry_run=args.dry_run,
+        )
+        snapshot["status"] = "dry_run_complete" if args.dry_run else "sent"
+        _write_json(snapshot_path, snapshot)
+        report = _build_loop_report(snapshot)
+        _write_text(report_path, report)
+        _print_report("Detected Books Loop Report", report)
+        return
 
     if args.target_viewer:
         if args.pick is None or args.place is None:

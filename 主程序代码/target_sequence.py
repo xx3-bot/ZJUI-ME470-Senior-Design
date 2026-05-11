@@ -20,10 +20,11 @@ DEFAULT_COMMAND_PATH = SIM_OUTPUT_DIR / "hardware_command_sequence.txt"
 DEFAULT_SUMMARY_PATH = SIM_OUTPUT_DIR / "TARGET_SEQUENCE_SUMMARY.md"
 DEFAULT_SEND_SCRIPT = SIM_OUTPUT_DIR / "send_hardware_sequence.py"
 
-PICK_APPROACH_CLEARANCE_MM = 100.0
+PICK_APPROACH_CLEARANCE_MM = 120.0
 POST_GRASP_LIFT_MM = 95.0
-POST_GRASP_RETRACT_MM = 100.0
-MIN_POST_GRASP_RADIUS_MM = 160.0
+POST_GRASP_RETRACT_MM = 200.0
+MIN_POST_GRASP_RADIUS_MM = 110.0
+POST_RELEASE_RETREAT_MIN_Z_MM = 240.0
 TRANSPORT_RETRACT_MM = 70.0
 MIN_TRANSPORT_RADIUS_MM = 170.0
 TRANSPORT_RETRACT_TRIGGER_RADIUS_MM = 240.0
@@ -36,8 +37,11 @@ DEFAULT_SMALL_MOVE_TIME_MS = 400
 DEFAULT_MEDIUM_MOVE_TIME_MS = 800
 DEFAULT_NORMAL_MOVE_TIME_MS = 1500
 GRIPPER_CLOSE_COMMAND = "{#005P1700T1000!}"
-GRIPPER_PRE_OPEN_COMMAND = "{#005P1300T1000!}"
-GRIPPER_OPEN_COMMAND = "{#005P1400T1000!}"
+GRIPPER_PRE_OPEN_COMMAND = "{#005P1500T1000!}"
+GRIPPER_OPEN_COMMAND = "{#005P1500T1000!}"
+PLACEMENT_SUPPORT_MODE = "left_wall"
+LEFT_WALL_WRIST_ROLL_DEG = 15.0
+LEFT_WALL_WRIST_ROLL_TIME_MS = 800
 HARDWARE_HOME_COMMAND = (
     "{#000P1500T1500!#001P2000T1500!#002P2000T1500!"
     "#003P0850T1500!#004P1500T1500!#005P1500T1500!}"
@@ -47,6 +51,7 @@ PWM_CENTER = 1500.0
 PWM_PER_DEG = 1000.0 / 135.0
 WRIST_ROLL_JOINT_INDEX = 4
 PREFERRED_PICK_SEED_DEG = [28.88, -53.57, 97.98, -46.52, 0.0]
+PREFERRED_PICK_LIFT_SEED_DEG = [0.0, -110.0, 110.0, 0.0, 0.0]
 
 
 @dataclass(frozen=True)
@@ -121,13 +126,23 @@ def build_target_waypoints(
     place_x, place_y, place_z = place
     approach_z = pick_z + PICK_APPROACH_CLEARANCE_MM
     transport_z = pick_z + POST_GRASP_LIFT_MM
+    place_retreat_z = max(transport_z, POST_RELEASE_RETREAT_MIN_Z_MM)
     extract_x, extract_y = _post_grasp_extract_xy(pick_x, pick_y)
     retract_x, retract_y = _retract_xy_toward_origin(extract_x, extract_y, TRANSPORT_RETRACT_MM)
     waypoints = [
         TargetWaypoint("pick_approach", pick_x, pick_y, approach_z, False, True, False),
         TargetWaypoint("pick", pick_x, pick_y, pick_z, False, True, False),
         TargetWaypoint("gripper_close_pose", pick_x, pick_y, pick_z, True, False, False),
-        TargetWaypoint("pick_lift", extract_x, extract_y, transport_z, True, False, False),
+        TargetWaypoint(
+            "pick_lift",
+            extract_x,
+            extract_y,
+            transport_z,
+            True,
+            False,
+            False,
+            horizontal_end_link=False,
+        ),
     ]
     if (retract_x, retract_y) != (extract_x, extract_y):
         waypoints.append(TargetWaypoint("transport_retract", retract_x, retract_y, transport_z, True, False, False))
@@ -146,7 +161,7 @@ def build_target_waypoints(
         TargetWaypoint("place_approach", place_x, place_y, transport_z, True, False, False),
         TargetWaypoint("place_final", place_x, place_y, place_z, True, False, False),
         TargetWaypoint("gripper_open_pose", place_x, place_y, place_z, False, False, True),
-        TargetWaypoint("place_retreat", place_x, retreat_y, transport_z, False, False, True),
+        TargetWaypoint("place_retreat", place_x, retreat_y, place_retreat_z, False, False, True),
         ]
     )
     return waypoints
@@ -180,6 +195,7 @@ def write_trajectory_csv(waypoints: list[TargetWaypoint], path: Path) -> None:
         writer = csv.writer(handle)
         writer.writerow(
             [
+                "label",
                 "x_mm",
                 "y_mm",
                 "z_mm",
@@ -193,6 +209,7 @@ def write_trajectory_csv(waypoints: list[TargetWaypoint], path: Path) -> None:
         for waypoint in waypoints:
             writer.writerow(
                 [
+                    waypoint.label,
                     waypoint.x,
                     waypoint.y,
                     waypoint.z,
@@ -265,7 +282,7 @@ def read_trajectory_csv(path: Path, np_module) -> list[TargetWaypoint]:
         for index, row in enumerate(reader, start=1):
             waypoints.append(
                 TargetWaypoint(
-                    label=f"waypoint_{index:02d}",
+                    label=row.get("label") or f"waypoint_{index:02d}",
                     x=float(row["x_mm"]),
                     y=float(row["y_mm"]),
                     z=float(row["z_mm"]),
@@ -322,6 +339,8 @@ def solve_target_waypoints(
             continue
 
         seed_qs = []
+        if waypoint.label == "pick_lift":
+            seed_qs.append(np_module.deg2rad(PREFERRED_PICK_LIFT_SEED_DEG))
         if previous_q is not None:
             seed_qs.append(previous_q.copy())
         if waypoint.return_book_visible:
@@ -444,6 +463,17 @@ def arm_command_from_pwm(
     )
 
 
+def wrist_roll_left_wall_pwm(current_pwm: tuple[int, int, int, int, int]) -> tuple[int, int, int, int, int]:
+    """Tilt held book left before release for the 'left_wall' placement mode."""
+    tilted = list(current_pwm)
+    # Hardware note: servo004 PWM increases from left toward right, so left roll
+    # is a negative delta around the current wrist-roll PWM.
+    tilted[WRIST_ROLL_JOINT_INDEX] = int(
+        round(tilted[WRIST_ROLL_JOINT_INDEX] - LEFT_WALL_WRIST_ROLL_DEG * PWM_PER_DEG)
+    )
+    return tuple(tilted)
+
+
 def build_hardware_commands(
     waypoints,
     q_waypoints,
@@ -487,6 +517,34 @@ def build_hardware_commands(
         commands.append(command)
         metadata.append(CommandMetadata(label=label, command=command, note=note))
 
+    def add_left_wall_wrist_roll_step() -> None:
+        nonlocal previous_arm_pwm
+        if PLACEMENT_SUPPORT_MODE != "left_wall":
+            return
+        if previous_arm_pwm is None:
+            return
+        tilted_pwm = wrist_roll_left_wall_pwm(previous_arm_pwm)
+        delta = abs(tilted_pwm[WRIST_ROLL_JOINT_INDEX] - previous_arm_pwm[WRIST_ROLL_JOINT_INDEX])
+        command = (
+            f"{{#004P{tilted_pwm[WRIST_ROLL_JOINT_INDEX]:04d}"
+            f"T{LEFT_WALL_WRIST_ROLL_TIME_MS:04d}!}}"
+        )
+        commands.append(command)
+        metadata.append(
+            CommandMetadata(
+                label="left_wall_wrist_roll",
+                command=command,
+                pwm=(tilted_pwm[WRIST_ROLL_JOINT_INDEX],),
+                deltas=(delta,),
+                times_ms=(LEFT_WALL_WRIST_ROLL_TIME_MS,),
+                note=(
+                    f"decision hint '{PLACEMENT_SUPPORT_MODE}': wrist roll left "
+                    f"{LEFT_WALL_WRIST_ROLL_DEG:g} deg before release"
+                ),
+            )
+        )
+        previous_arm_pwm = tilted_pwm
+
     add_arm_step("pick_approach")
     add_gripper_step("gripper_pre_open", GRIPPER_PRE_OPEN_COMMAND, "fixed pre-grasp wide open")
     add_arm_step("pick")
@@ -515,6 +573,7 @@ def build_hardware_commands(
 
     add_arm_step("place_approach")
     add_arm_step("place_final")
+    add_left_wall_wrist_roll_step()
     add_gripper_step("gripper_open", GRIPPER_OPEN_COMMAND, "fixed safe release")
     add_arm_step("place_retreat")
     commands.append(HARDWARE_HOME_COMMAND)
@@ -534,6 +593,7 @@ def build_fixed_hardware_commands(waypoints, q_waypoints, np_module) -> list[str
     index_by_label = {waypoint.label: index for index, waypoint in enumerate(waypoints)}
     commands = [
         arm_command_from_q(q_deg[index_by_label["pick_approach"]]),
+        GRIPPER_PRE_OPEN_COMMAND,
         arm_command_from_q(q_deg[index_by_label["pick"]]),
         GRIPPER_CLOSE_COMMAND,
         arm_command_from_q(q_deg[index_by_label["pick_lift"]]),
@@ -549,6 +609,10 @@ def build_fixed_hardware_commands(waypoints, q_waypoints, np_module) -> list[str
             ),
             arm_command_from_q(q_deg[index_by_label["place_approach"]]),
             arm_command_from_q(q_deg[index_by_label["place_final"]]),
+            (
+                f"{{#004P{wrist_roll_left_wall_pwm(pwm_from_mujoco_angles_deg(q_deg[index_by_label['place_final']]))[WRIST_ROLL_JOINT_INDEX]:04d}"
+                f"T{LEFT_WALL_WRIST_ROLL_TIME_MS:04d}!}}"
+            ),
             GRIPPER_OPEN_COMMAND,
             arm_command_from_q(q_deg[index_by_label["place_retreat"]]),
             HARDWARE_HOME_COMMAND,
@@ -602,6 +666,7 @@ def write_summary(
         f"- post-grasp extract lift: `{POST_GRASP_LIFT_MM} mm`",
         f"- post-grasp extract toward origin: `{POST_GRASP_RETRACT_MM} mm`, minimum radius `{MIN_POST_GRASP_RADIUS_MM} mm`",
         f"- extra transport retract toward origin: `{TRANSPORT_RETRACT_MM} mm` when radius remains above `{TRANSPORT_RETRACT_TRIGGER_RADIUS_MM} mm`",
+        f"- post-release retreat minimum z: `{POST_RELEASE_RETREAT_MIN_Z_MM} mm`",
         f"- base-only transfer time: `{BASE_ONLY_TIME_MS} ms`",
         (
             "- dynamic arm timing: "
@@ -611,6 +676,12 @@ def write_summary(
         ),
         f"- gripper pre-open before pick descent: `{GRIPPER_PRE_OPEN_COMMAND}`",
         f"- gripper close: `{GRIPPER_CLOSE_COMMAND}`",
+        f"- placement support mode: `{PLACEMENT_SUPPORT_MODE}`",
+        (
+            "- left-wall release hint: "
+            f"servo004 wrist roll left `{LEFT_WALL_WRIST_ROLL_DEG} deg` "
+            f"before opening gripper"
+        ),
         f"- gripper open/release: `{GRIPPER_OPEN_COMMAND}`",
         f"- final measured home: `{HARDWARE_HOME_COMMAND}`",
         "",

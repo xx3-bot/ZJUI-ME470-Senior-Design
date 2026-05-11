@@ -35,9 +35,9 @@ Behavior:
   motion yet.
 - Generates a fresh `target_sequence` with fixed v1 coordinates:
   - `pick = (220, 0, 115)`
-  - `left place = (-25, 250, 124.25)`
-  - `center place = (0, 250, 124.25)`
-  - `right place = (25, 250, 124.25)`
+  - `left place = (-25, 250, 115)`
+  - `center place = (0, 250, 115)`
+  - `right place = (25, 250, 115)`
 - Writes outputs under `sim_output/grip_place_test/<timestamp>/`, including
   `left.png`, `center.png`, `grip_place_test_snapshot.json`,
   `grip_place_test_report.md`, `control_trajectory.csv`,
@@ -51,6 +51,12 @@ Verification on 2026-05-11:
   the snapshot reports `partial`; this is expected in Codex and should be
   re-tested from the user's Terminal where camera access is granted.
 
+Current fixed place update:
+- The fixed grip/place test points now use final release height `z=115 mm`:
+  `(-25,250,115)`, `(0,250,115)`, `(25,250,115)`.
+- `place=(0,250,115)` passed the current post-grasp extract and `left_wall`
+  wrist-roll dry-run.
+
 ### 2026-05-11 post-grasp extract-and-lift update
 
 The target-sequence post-grasp motion has changed from pure vertical lifting to
@@ -58,11 +64,11 @@ extracting the book while lifting.
 
 Current target-sequence policy:
 - `pick_lift` now means post-grasp extract-and-lift.
-- The generator retracts XY toward the arm origin by up to `50 mm`, but never
-  below `170 mm` horizontal radius.
-- The generator lifts to `pick.z + 65 mm`.
+- The generator retracts XY toward the arm origin by up to `100 mm`, but never
+  below `160 mm` horizontal radius.
+- The generator lifts to `pick.z + 95 mm`.
 - For the clean test pick `pick=(220, 0, 115)`, this produces
-  `pick_lift=(170, 0, 180)`.
+  `pick_lift=(160, 0, 210)`.
 - If the resulting `pick_lift` radius is still greater than `240 mm`, the older
   extra `transport_retract` step can still be inserted; otherwise the sequence
   goes directly from `pick_lift` to the shelf-side base-only transfer.
@@ -72,9 +78,28 @@ Verification on 2026-05-11:
   `(0,250,124.25)`, and `(25,250,124.25)` passed MuJoCo IK.
 - The formal command
   `python3 主程序代码/main.py --run-target-sequence --dry-run --wait-trigger none --pick 220 0 115 --place 0 250 124.25`
-  generated `pick_lift=(170,0,180)` and 10 PWM commands.
+  generated `pick_lift=(160,0,210)`.
 - `--grip-place-test` dry-runs for left and right fixed slots also passed IK;
   camera capture remained partial in Codex due to macOS camera permission.
+
+### 2026-05-11 left-wall release decision hint
+
+The first placement decision hint has been added to the control sequence:
+`left_wall` / `左侧靠墙`.
+
+Behavior:
+- After `place_final`, before `gripper_open`, the target-sequence generator
+  emits a servo004-only wrist-roll command.
+- The default hint rolls the wrist left by `7.5 deg`.
+- Hardware convention from the notes is preserved: servo004 PWM increases from
+  left toward right, so a left roll is a negative PWM delta.
+- For the current clean dry-run, this produced `{#004P1444T0800!}` before the
+  release command `{#005P1400T1000!}`.
+
+Purpose:
+- This is a small decision-to-control bridge. The decision system can eventually
+  output `left_wall` when a book should lean against a left wall/support, while
+  the control layer translates that hint into a release-time wrist adjustment.
 
 ### 2026-05-01 control/planning boundary for agents
 

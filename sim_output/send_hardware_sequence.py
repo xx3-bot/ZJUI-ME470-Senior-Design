@@ -5,11 +5,13 @@ from __future__ import annotations
 
 import argparse
 import re
+import sys
 import time
 from pathlib import Path
 
 
 DEFAULT_COMMAND_FILE = Path(__file__).resolve().parent / "hardware_command_sequence.txt"
+MAIN_CODE_DIR = Path(__file__).resolve().parent.parent / "主程序代码"
 TIME_TOKEN_RE = re.compile(r"T(\d{1,5})!")
 
 
@@ -22,13 +24,17 @@ def _load_commands(path: Path) -> list[str]:
 
 def _open_serial(port: str, baud: int, timeout: float):
     try:
+        if str(MAIN_CODE_DIR) not in sys.path:
+            sys.path.insert(0, str(MAIN_CODE_DIR))
+        from hardware_port import resolve_hardware_port
         import serial  # type: ignore
     except ImportError as exc:
         raise SystemExit(
             "pyserial is required for hardware serial output.\n"
-            "Install on Ubuntu with: python3 -m pip install pyserial"
+            "Install it with: python3 -m pip install pyserial"
         ) from exc
 
+    port = resolve_hardware_port(port)
     ser = serial.Serial()
     ser.port = port
     ser.baudrate = baud
@@ -105,7 +111,7 @@ def main() -> None:
         description="Send hardware_command_sequence.txt to the KM1 controller."
     )
     parser.add_argument("--commands", type=Path, default=DEFAULT_COMMAND_FILE)
-    parser.add_argument("--port", default="/dev/ttyUSB0")
+    parser.add_argument("--port", default="auto")
     parser.add_argument("--baud", type=int, default=115200)
     parser.add_argument("--read-timeout", type=float, default=0.1)
     parser.add_argument("--startup-delay", type=float, default=2.0)

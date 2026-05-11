@@ -23,10 +23,15 @@ instead of rejecting the empty input.
 
 The generated target sequence now treats `pick_lift` as a post-grasp
 extract-and-lift pose, not a pure vertical lift. It retracts the held book
-toward the arm origin by up to `50 mm`, never below `170 mm` horizontal radius,
-and lifts to `pick.z + 65 mm`. For the clean test pick `(220, 0, 115)`, this
-produces `pick_lift = (170, 0, 180)`. An additional `transport_retract` waypoint
+toward the arm origin by up to `100 mm`, never below `160 mm` horizontal radius,
+and lifts to `pick.z + 95 mm`. For the clean test pick `(220, 0, 115)`, this
+produces `pick_lift = (160, 0, 210)`. An additional `transport_retract` waypoint
 is inserted only if the post-grasp extract pose still has radius `> 240 mm`.
+
+Current placement decision hint: `left_wall`. Before releasing the book, the
+generated command sequence adds a servo004-only wrist-roll command that tilts
+the held book left by `7.5 deg`, then opens the gripper. This is the first
+simple decision-to-control hint for leaning a book against a left wall/support.
 
 The intended future standard Auto flow is documented in
 `AUTO_STANDARD_FLOW.md`. That document is for design/team alignment only; the
@@ -74,9 +79,9 @@ python3 主程序代码/main.py --grip-place-test --dry-run --wait-trigger none 
 Fixed v1 coordinates:
 
 - `pick = (220, 0, 115)`
-- `left place = (-25, 250, 124.25)`
-- `center place = (0, 250, 124.25)`
-- `right place = (25, 250, 124.25)`
+- `left place = (-25, 250, 115)`
+- `center place = (0, 250, 115)`
+- `right place = (25, 250, 115)`
 
 This mode logs OCR output if the camera works, but it does not use the OCR
 pick point to drive the arm yet. It does not run the `+90 deg` scan and does

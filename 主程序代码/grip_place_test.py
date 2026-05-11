@@ -28,9 +28,9 @@ from target_sequence import ROOT, TimingConfig, generate_target_sequence, print_
 DEFAULT_OUTPUT_ROOT = ROOT / "sim_output" / "grip_place_test"
 DEFAULT_PICK = (220.0, 0.0, 115.0)
 PLACE_POINTS = {
-    "left": (-25.0, 250.0, 124.25),
-    "center": (0.0, 250.0, 124.25),
-    "right": (25.0, 250.0, 124.25),
+    "left": (-25.0, 250.0, 115.0),
+    "center": (0.0, 250.0, 115.0),
+    "right": (25.0, 250.0, 115.0),
 }
 
 GRIP_PLACE_VIEWS = (
