@@ -154,3 +154,44 @@ class SpineDetector:
             if hit is not None:
                 hits.append(hit)
         return hits
+
+    def detect_with_unknown_texts(self, frame: np.ndarray) -> tuple[List[SpineHit], List[dict]]:
+        """Return known-title hits plus OCR clusters not matched to the catalog.
+
+        The unknown list is intentionally conservative and report-only. It helps
+        the operator notice a visible book/text that did not map to
+        config.KNOWN_BOOK_TITLES, without letting that text drive motion.
+        """
+        polys = self._ocr.recognize_polygons(frame)
+        if not polys:
+            return [], []
+        clusters = _cluster_polygons(polys)
+        hits: List[SpineHit] = []
+        unknowns: List[dict] = []
+        seen_unknown: set[str] = set()
+        for cluster in clusters:
+            cluster.polygons.sort(key=lambda p: p.center[1])
+            hit = _cluster_to_hit(cluster, self._ocr)
+            if hit is not None:
+                hits.append(hit)
+                continue
+
+            text = "".join(p.text for p in cluster.polygons).strip()
+            if len(text) < 2 or text in seen_unknown:
+                continue
+            if not any(p.is_vertical_text for p in cluster.polygons):
+                continue
+            all_pts = np.concatenate([p.polygon for p in cluster.polygons], axis=0)
+            x1, y1 = np.min(all_pts, axis=0)
+            x2, y2 = np.max(all_pts, axis=0)
+            score = float(np.mean([p.score for p in cluster.polygons]))
+            unknowns.append(
+                {
+                    "text": text,
+                    "confidence": max(0.0, min(1.0, score)),
+                    "bbox": (int(x1), int(y1), int(x2), int(y2)),
+                    "reason": "recognized OCR text did not match KNOWN_BOOK_TITLES",
+                }
+            )
+            seen_unknown.add(text)
+        return hits, unknowns

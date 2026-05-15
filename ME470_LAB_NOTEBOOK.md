@@ -3,6 +3,91 @@
 Project: A Vision-Integrated Robot for Autonomous Book Classification and Reshelving in Library Environments  
 Team: Zehao Bao, Zhenxiong Tang, Zhecheng Lou, Xinrui Xiong  
 
+## Current Integration Note - 2026-05-15
+
+This update records the current Integrated Algorithm checkpoint. The main
+progress in this round is software integration and cleanup around ranging,
+vision recognition, decision/world-model state, and the Auto demo shell.
+
+Current integrated software status:
+
+- `--auto-demo` is now the main one-command demo shell. It runs startup scan,
+  builds a perception snapshot, creates a world-model-backed task plan,
+  generates fresh `target_sequence` commands, shows a confirmation screen, and
+  sends the merged command sequence after the configured trigger.
+- Startup scan captures the center/bin view first, starts bin analysis in the
+  background, then captures the left shelf/world-context view and starts shelf
+  analysis while the arm returns home.
+- Auto demo now reuses `startup_scan_snapshot.json` bin pick candidates instead
+  of opening the camera a second time. This prevents one run from mixing two
+  different visual measurements.
+- Bin ranging has improved: the system now combines OCR/entity detection,
+  book-spine boxes, image preprocessing, and visible bin-grid geometry to
+  estimate pick depth and lateral Y.
+- Real testing showed a practical workspace boundary: pick X near `309-310 mm`
+  can precheck successfully, while a farther setup around `320.9 mm` caused
+  MuJoCo IK failure for multiple books. The next software guard should report
+  "book/bin too far" instead of letting this fail deep in IK.
+- The decision/world-model layer now records detected books, planned placements,
+  occupied demo shelf slots, blocked reasons, and placement hints such as
+  `lean_left` / `lean_right`.
+- `target_sequence.py` remains the only formal hardware command-generation
+  path. Older test trajectories should not be treated as reusable motion plans.
+
+Important 2026-05-15 shelf-vision correction:
+
+- A real run exposed a serious false positive. The image was visibly still the
+  bin/books view, but the current shelf detector interpreted the yellow bin
+  structure as two shelf sections and produced fake shelf slots.
+- Therefore, current shelf slice output is useful for software integration and
+  visualization, but it is not yet reliable enough for final autonomous shelf
+  placement.
+- The next shelf-vision step should add a CAD/pose-validation gate based on the
+  known book-stand geometry (`81 x 162` and partial `81 x 81` faces), visible
+  CAD edges/perforation structure, and reprojection or `solvePnP` checks. If a
+  frame does not pass this validation, it must not generate `shelf_world_model`.
+- Full CAD visibility cannot be required during normal operation after books
+  are placed. The intended approach is: use a valid startup shelf pose to
+  initialize shelf coordinates, then update local occupancy/book-spine support
+  from later frames.
+
+Shared materials for remote teammates:
+
+- Test images and selected runtime artifacts are centralized under
+  `测试文件/`.
+- `测试文件/runtime_artifacts/startup_scan/20260515_180953` is an important
+  negative example for shelf detection: it should be rejected by the future
+  CAD/pose-validation gate.
+
+## Previous Current Integration Note - 2026-05-12
+
+This notebook preserves chronological experiment history, so older entries may
+mention earlier motion constants such as gripper `{#005P1400T1000!}`,
+post-grasp lift values, or old fixed demo coordinates. For current operation,
+use the newer handoff/run-mode logs as the source of truth:
+
+- `AI_HANDOFF_CONTEXT.md`
+- `RUN_MODES.md`
+- `VISION_INTEGRATION_LOG.md`
+
+Current practical demo path:
+
+```bash
+python3 主程序代码/main.py \
+  --auto-demo \
+  --place 0 250 140 \
+  --loop-place-step-mm 15 \
+  --camera-index auto \
+  --dry-run
+```
+
+Current vision pick convention is `(arm_X, arm_Y, arm_Z) = (250, vision_y, 115)`.
+Current `target_sequence.py` uses post-grasp lift `95 mm`, post-grasp retract
+`200 mm`, minimum post-grasp radius `125 mm`, and `left_wall` wrist roll
+`15 deg`. Shelf release is now a narrow gripper opening
+`{#005P1625T1000!}` rather than a wide open command, to avoid touching nearby
+books.
+
 ## 1. Project Objective
 
 The project aims to build a robotic system that can identify returned books, determine their target shelf zones, pick up a book from a return-bin area, find a suitable shelf gap, and place the book back into the shelf. The final system is intended to integrate perception, decision-making, motion planning, and hardware execution.
@@ -1188,3 +1273,77 @@ System demo:
 - Focus the final hardware demo on lower-shelf fixed pick/place first.
 - Use upper-shelf mock data for decision robustness, not hardware reach claims.
 - Keep integration through `motion_adapter.py` and `perception_adapter.py`.
+
+## 7. 2026-05-13 Low Insert Pick Approach
+
+Target-driven motion policy update:
+
+- The formal hardware path in `主程序代码/target_sequence.py` now uses
+  `PICK_APPROACH_MODE = "low_insert_approach"`.
+- Instead of moving to a high point directly above the book and descending a
+  long distance, the sequence now adds `pick_insert_ready` before
+  `pick_approach`. The obvious downward posture change should happen at a
+  smaller X before the arm moves forward to surround the target book.
+- Current constants:
+  - `PICK_INSERT_READY_RETRACT_MM = 75.0`
+  - `PICK_INSERT_READY_Z_OFFSET_MM = 45.0`
+  - `PICK_INSERT_RETRACT_MM = 40.0`
+  - `PICK_INSERT_Z_OFFSET_MM = 0.0`
+  - `MIN_POST_GRASP_RADIUS_MM = 125.0`
+  - `POST_RELEASE_BACKOFF_MM = 50.0`
+- For the current clean demo point `pick=(250,0,115)`, this produces
+  `pick_insert_ready=(175,0,160)`, then `pick_approach=(210,0,115)`.
+- Purpose: let the gripper surround the target book earlier and reduce the
+  chance of pressing down onto neighboring books when vision has small lateral
+  error.
+- Verification: command generation with `pick=(250,0,115)` and
+  `place=(0,250,140)` passed MuJoCo IK and generated 12 hardware commands.
+- Follow-up adjustment: since the claw now approaches low and surrounds the
+  target earlier, pre-grasp opening is sent before `pick_approach`. It was
+  later tightened to `{#005P1445T1000!}` to reduce side contact while still
+  clearing the target book. Shelf release remains narrow but was opened a
+  little more to `{#005P1625T1000!}`.
+- Follow-up adjustment: post-grasp extraction now stops at about
+  `pick_lift=(125,0,210)` for `pick=(250,0,115)`, reducing the X-direction
+  pullback by `15 mm` compared with the previous `x=110` behavior.
+- Follow-up adjustment: added the explicit `pick_insert_ready` waypoint so the
+  arm reaches a posture similar to `x=175 mm, z=160 mm` before extending toward
+  the book. Verification with `pick=(250,0,115)` and `place=(0,250,140)` passed
+  MuJoCo IK and generated 13 hardware commands.
+- Follow-up adjustment: added `place_backoff` after gripper release. For
+  `place=(0,250,140)`, the arm now moves to `place_backoff=(0,200,140)` before
+  lifting to `place_retreat=(0,220,240)`, creating a `50 mm` horizontal pullback
+  before the upward withdrawal. Verification passed MuJoCo IK and generated 14
+  hardware commands.
+
+## 8. 2026-05-13 Shelf Section / Slice Scoring v1
+
+Shelf-vision / decision candidate update:
+
+- Added `主程序代码/vision/shelf_scanner.py`.
+- The module detects left/right shelf sections from long vertical edges.
+- Each section is assumed to be about `81 mm` wide.
+- Each section is split into `5` coarse slices, about `16 mm` each.
+- Local centered slice X values are about `-32.4, -16.2, 0, +16.2, +32.4 mm`.
+- Camera-relative depth is estimated from known section width:
+  `depth_mm = fx * 81 / bbox_width_px`. This does not apply external camera
+  pose relative to the robot.
+- Edge support scoring:
+  - slice `0`: score `30`, `placement_hint="lean_left"`,
+    `support_side="left_wall"`.
+  - slice `4`: score `30`, `placement_hint="lean_right"`,
+    `support_side="right_wall"`.
+  - middle slices: score `10`, `placement_hint="center"`.
+- Current occupancy state is `unknown`; future shelf occupancy/free-space
+  detection should adjust or reject these candidates.
+- Verified with `测试图像/test shelf.png`:
+  - left section bbox `[162, 123, 461, 1102]`
+  - right section bbox `[648, 123, 460, 1102]`
+  - average camera depth `169.4 mm`
+  - debug overlay `/private/tmp/test_shelf_5slice_scored.png`
+- This is not yet wired into `--auto-demo` or hardware execution.
+- Verified with `测试图像/shelf2.png`:
+  - left section bbox `[386, 144, 465, 1152]`
+  - right section bbox `[851, 144, 465, 1152]`
+  - average camera depth `167.7 mm`
+  - debug overlay `/private/tmp/shelf2_depth_5slice_scored.png`

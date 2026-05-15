@@ -7,3 +7,9 @@ __pycache__/
 主程序代码/vision/captures/
 主程序代码/vision/test_images/
 主程序代码/vision/calibration_images/
+
+# Runtime output is copied into 测试文件/ when it should be shared.
+sim_output/startup_scan/
+sim_output/detected_books_loop/
+sim_output/grip_place_test/
+sim_output/current_detected_book_sequence/

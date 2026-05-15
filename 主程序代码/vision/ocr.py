@@ -23,6 +23,8 @@ import numpy as np
 
 import config
 
+from .image_preprocess import enhance_for_ocr
+
 logging.getLogger("ppocr").setLevel(logging.WARNING)
 
 _CHAR_OVERLAP_RATIO = 0.5
@@ -121,7 +123,7 @@ class SpineOCR:
             kwargs["text_recognition_model_name"] = rec_name
         self._ocr = PaddleOCR(**kwargs)
 
-    def recognize_polygons(self, frame: np.ndarray) -> List[OcrPolygon]:
+    def _recognize_polygons_once(self, frame: np.ndarray) -> List[OcrPolygon]:
         """整帧 OCR；返回所有通过 min_score 过滤的文本块（带 polygon）。
 
         polygon 坐标始终在传入 frame 的原始坐标系中：内部如果做了下采样，
@@ -159,6 +161,20 @@ class SpineOCR:
                 poly_arr = (poly_arr * inv).astype(np.float32)
             out.append(OcrPolygon(text=text_str, score=score_val, polygon=poly_arr))
         return out
+
+    def recognize_polygons(self, frame: np.ndarray) -> List[OcrPolygon]:
+        """Run OCR on the original frame, with a cleaned-image fallback."""
+        out = self._recognize_polygons_once(frame)
+        if out:
+            return out
+        try:
+            enhanced = enhance_for_ocr(frame)
+        except ValueError:
+            return []
+        fallback = self._recognize_polygons_once(enhanced)
+        if fallback:
+            print(f"[VISION-OCR] 原图未检出文本，增强图 fallback 检出 {len(fallback)} 个文本块")
+        return fallback
 
     def match_title(self, combined: str) -> Tuple[Optional[str], float]:
         """把拼接后的文本对照 KNOWN_BOOK_TITLES 做模糊匹配。"""

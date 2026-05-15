@@ -1,6 +1,6 @@
 # AI Handoff Context - ME470 Book Reshelving Project
 
-Last updated: 2026-05-11 (Asia/Shanghai)
+Last updated: 2026-05-15 (Asia/Shanghai)
 
 ## 1. Project Overview
 
@@ -16,6 +16,281 @@ Team context from user:
 - Current ROS2 progress has moved past zero as of 2026-04-30: user has confirmed PWM command sending works on the physical arm, and serial monitoring receives ESP32/controller feedback such as command echoes and `@GroupDone!`.
 
 ## 2. Current Status and Confirmed Direction
+
+### 2026-05-15 integration checkpoint: ranging, vision, decision, and Auto shell
+
+This checkpoint is the current source of truth for the Integrated Algorithm
+folder. The main progress since the earlier handoff is not a new final Auto
+system, but a stronger working software skeleton:
+
+- **Bin ranging / pick pose**
+  - The bin pipeline now combines OCR/entity detection with visible bin-grid
+    geometry to estimate current pick depth and lateral position.
+  - Startup scan stores `bin.pick_candidates[*].pick` in
+    `startup_scan_snapshot.json`; Auto demo now reuses these startup-scan
+    candidates instead of opening the camera a second time and drifting to a
+    different X value.
+  - Real tests showed the measured pick X can move near the IK boundary
+    (`~320 mm`) when books/bin are too far away. Around `~309-310 mm` the same
+    three-book snapshot prechecked successfully. Future code should add an
+    operator-facing "book/bin too far" guard rather than forcing IK failures.
+
+- **Vision recognition**
+  - OCR-first book recognition, spine/entity boxes, denoise/edge preprocessing,
+    bin-grid depth overlay, and visual debug outputs are now integrated into
+    startup scan and Auto demo reports.
+  - Known books currently include `聊斋志异`, `羊皮卷`, `毛泽东思想概况`,
+    `人性的弱点`, `鬼谷子`, `墨菲定律`, and the ideological textbook entry.
+  - Unknown OCR text is reported for manual intervention and must not drive the
+    robot.
+
+- **Decision / world model**
+  - `WorldModel` now records detected bin books, planned placements, occupied
+    demo shelf slots, and blocked reasons.
+  - A-route shelf logic exists as a software skeleton: startup scan initializes
+    shelf slots, decision chooses ranked free candidates, and execution updates
+    occupancy. Placement hints such as `lean_left` / `lean_right` are carried
+    into `target_sequence.py`.
+  - Current shelf placement remains a demo model, not a finished robust shelf
+    localization system.
+
+- **Auto software shell**
+  - `--auto-demo` is the current main one-command shell. It runs startup scan,
+    builds a snapshot, generates a plan, prints a confirmation screen, and then
+    sends the merged command sequence after the configured trigger.
+  - Startup scan captures center/bin first, submits bin analysis in a background
+    thread, then captures the left shelf/world-context view and submits shelf
+    analysis while the arm returns home.
+  - Processed visual overlays are written to each run folder. Some runs also
+    open the overlays after planning.
+
+- **Important shelf-vision correction**
+  - A 2026-05-15 real run showed a serious false positive: an image that was
+    visibly still the bin view was interpreted as two shelf sections and
+    generated 10 fake slots.
+  - Therefore, current shelf slots are **not yet trustworthy** unless the image
+    is visually confirmed to contain the actual shelf. The next shelf task is a
+    CAD/pose-validation gate: no image should produce `shelf_world_model` unless
+    it passes book-stand CAD geometry checks.
+  - Full neural 6D pose is likely too heavy for the immediate demo. The
+    practical next step is CAD-lite pose validation: use known 81x162 / 81x81
+    shelf model geometry, visible edges/perforation pattern, and `solvePnP` or
+    reprojection checks to reject bin views and partial false positives.
+  - Once initialized from a valid shelf view, later runs should update slice
+    occupancy/book support from local vision instead of requiring the whole CAD
+    model to remain unobstructed after books are placed.
+
+- **Shared test artifacts**
+  - Static test images and selected runtime artifacts are now centralized under
+    `测试文件/`.
+  - `测试文件/runtime_artifacts/startup_scan/20260515_180953` is an important
+    negative example: it looks like bin, but the old shelf detector accepted it.
+    Use it as a regression test for the CAD/pose-validation gate.
+
+### 2026-05-14 startup-scan visual correction
+
+The user ran a real two-view startup scan with the camera mounted on the arm.
+The scan completed and produced `left_shelf_overlay.png`,
+`center_book_instances_overlay.png`, and `center_bin_grid_overlay.png`.
+
+Important corrections from visually inspecting those images:
+- Physical left scan is still `servo000 P2167`; this is the correct real
+  left-90 direction for the current arm.
+- The real bin/book grasp plane should now be treated as `arm X ~= 320 mm`.
+  `config.BIN_PICK_DEPTH_MM` was updated to `320.0`, and
+  `BIN_FIXED_DEPTH_MM` now derives to `229.8` using the mounted camera X offset
+  `90.2 mm`.
+- Startup-scan user reports should show the true planning candidates from
+  `bin.pick_candidates[*].pick`, not the older `bin.books[*].pick_point`
+  compatibility payload.
+- The bin-grid overlay is only a visual/metric sanity check. It should not
+  override the measured grasp X unless the user explicitly recalibrates the bin
+  geometry.
+- The current OCR/entity overlay can still overbox background objects; use it
+  as a debug visualization, not as the authoritative control geometry.
+- Shelf scan yaw calibration note: the physical shelf-view command is
+  `servo000 P2167`, nominally about `+90 deg` from `P1500` by the current
+  `1000 PWM / 135 deg` scale. The user reports the direction is correct but may
+  overshoot by roughly 1-2 degrees. Do not change the command yet; future shelf
+  extrinsics should expose this as a small yaw correction term.
+- Because the camera is rigidly mounted to the rotating base/pan assembly,
+  shelf-view camera extrinsics can now be derived from the known initial camera
+  offset `(90.2, 0, 102.0)` plus the measured shelf-scan yaw. This unlocks the
+  next step: convert shelf slice pixels/depth into arm-frame place poses instead
+  of requiring a manual `--place` anchor.
+- Shelf slice scoring now checks visible-yellow occupancy. Occupied slices are
+  penalized even if they are against a wall, while free neighboring slices can
+  receive a smaller adjacent-book support bonus. This is the current fix for the
+  case where the left edge slice already contains a placed book.
+
+### 2026-05-12 detected-books loop is the current strongest demo path
+
+The latest read-through of `Integrated Algorithm` found that the project has
+advanced beyond the fixed `Grip and place test` path. The current strongest
+semi-automatic demo path is:
+
+```bash
+python3 主程序代码/main.py \
+  --auto-demo \
+  --place 0 250 140 \
+  --loop-place-step-mm 15 \
+  --dry-run
+```
+
+Behavior:
+- Captures one current camera frame through `vision.lateral_pose_provider`.
+- Detects all visible known books using OCR + fuzzy title matching.
+- Orders candidates by `config.KNOWN_BOOK_TITLES`.
+- Converts each detected book into a pick pose shaped as
+  `(BIN_PICK_DEPTH_MM, vision_arm_y, BIN_PICK_GRASP_HEIGHT_MM)`.
+- Records detected books, planned placements, and occupied demo shelf positions
+  into `WorldModel`.
+- Uses a temporary fixed shelf placement provider: the first `--place` point
+  for book 1, then shifts each later placement along `+X` by
+  `--loop-place-step-mm`.
+- Generates one `target_sequence` per book and merges them into
+  `sim_output/detected_books_loop/<timestamp>/loop_hardware_command_sequence.txt`.
+- Prints an execution plan before the hardware sender step.
+- Omits intermediate home commands between books; the final book keeps the
+  measured home command.
+- `--run-detected-books-loop` remains as the lower-level debug alias for the
+  same workflow.
+- When `--max-loop-books` is omitted, Auto demo plans every known book detected
+  in the current camera frame. Use `--max-loop-books 1` for the first hardware
+  pass.
+- OCR text that does not match `KNOWN_BOOK_TITLES` is reported as needing
+  manual attention and is never used to drive the robot.
+- `--camera-index 1` can select the Mac/iPhone Continuity camera when OpenCV
+  exposes it as index 1; `--camera-index auto` is the protective fallback.
+
+Confirmed output from 2026-05-11:
+- A real `sent` run exists under
+  `sim_output/detected_books_loop/20260511_215629/`.
+- It generated 34 combined hardware commands for three books:
+  `羊皮卷`, `鬼谷子`, and `墨菲定律`.
+- Example detected picks from that run:
+  - `羊皮卷`: `(250.0, -52.37, 115.0)`
+  - `鬼谷子`: `(250.0, 48.99, 115.0)`
+  - `墨菲定律`: `(250.0, -1.14, 115.0)`
+
+This path is not full Auto yet because shelf scanning / ABCD section
+interpretation / decision-selected shelf slots are still not closed-loop.
+However, it is currently the best bridge between usable vision and usable
+hardware command generation.
+
+Immediate next validation step:
+- Run `--auto-demo --place 0 250 140 --loop-place-step-mm 15 --max-loop-books 3
+  --dry-run --wait-trigger none` from the user's Terminal with the real camera,
+  or omit `--max-loop-books` to process every detected known book.
+- Check OCR titles, each `(250, vision_y, 115)` pick pose, and the generated
+  place sequence `(0,250,140)`, `(15,250,140)`, `(30,250,140)`.
+- If dry-run output is sensible, test hardware with `--max-loop-books 1` first,
+  then increase to 2-3 books.
+- Do not add new higher-level features until this Auto demo dry-run and
+  one-book hardware pass are confirmed.
+
+### 2026-05-12 target-sequence constants observed in current code
+
+Important correction after reading the current file state: the top-level notes
+below still preserve the earlier design history, but the actual current values
+in `主程序代码/target_sequence.py` are:
+
+- `POST_GRASP_LIFT_MM = 95.0`
+- `POST_GRASP_RETRACT_MM = 200.0`
+- `MIN_POST_GRASP_RADIUS_MM = 125.0`
+- `POST_RELEASE_BACKOFF_MM = 50.0`
+- `TRANSPORT_RETRACT_MM = 70.0`
+- `TRANSPORT_RETRACT_TRIGGER_RADIUS_MM = 240.0`
+- `POST_RELEASE_RETREAT_MIN_Z_MM = 240.0`
+- `PICK_APPROACH_MODE = "low_insert_approach"`
+- `PICK_INSERT_READY_RETRACT_MM = 75.0`
+- `PICK_INSERT_READY_Z_OFFSET_MM = 45.0`
+- `PICK_INSERT_RETRACT_MM = 40.0`
+- `PICK_INSERT_Z_OFFSET_MM = 0.0`
+- `GRIPPER_CLOSE_COMMAND = "{#005P1700T1000!}"`
+- `GRIPPER_PRE_OPEN_COMMAND = "{#005P1445T1000!}"`
+- `GRIPPER_OPEN_COMMAND = "{#005P1625T1000!}"`, a narrow shelf release that
+  opens only `75 PWM` from closed to avoid knocking neighboring books.
+- `PLACEMENT_SUPPORT_MODE = "left_wall"`
+- `LEFT_WALL_WRIST_ROLL_DEG = 15.0`
+
+Do not rely on older prose that says the post-grasp retract is `100 mm`,
+minimum radius is `160 mm`, or left-wall wrist roll is `7.5 deg` unless the
+code is deliberately changed back. The code is the current source of truth.
+
+Pick approach update: the formal target-sequence path no longer approaches
+from a high point directly above the book. It now inserts `pick_insert_ready`
+before the low approach. For `pick=(250,0,115)`, the first arm target after
+pre-opening the gripper is roughly `(175,0,160)`, then `(210,0,115)`, then the
+final pick `(250,0,115)`. The goal is to complete the obvious downward posture
+change at smaller X, away from the book top, then move forward so the gripper
+surrounds the target book instead of diving down over it.
+
+Because the low insert approach puts the claw near the target book earlier,
+the pre-open command is sent before `pick_approach`, not after arriving near
+the book. Current pre-open is `{#005P1445T1000!}`: less open than the earlier
+temporary `{#005P1370T1000!}` setting to reduce side contact while still giving
+clearance for the target book. Shelf release remains narrow but was opened
+slightly more: `P1650 -> P1625`.
+
+Post-grasp extraction was also softened: for `pick=(250,0,115)`, `pick_lift`
+now retracts to about `(125,0,210)` instead of `(110,0,210)`, reducing the
+X-direction pullback by `15 mm`.
+
+Post-release retreat update: after `gripper_open`, the target sequence now adds
+`place_backoff` before lifting away. For `place=(0,250,140)`, this inserts
+`place_backoff=(0,200,140)`, then `place_retreat=(0,220,240)`. The intended
+behavior is release -> horizontal pullback `50 mm` -> lift away, rather than
+immediate upward-only withdrawal.
+
+### 2026-05-13 shelf section / slice scoring v1
+
+Added `主程序代码/vision/shelf_scanner.py` as a standalone shelf-vision candidate
+provider. It is not wired into hardware execution yet.
+
+- Detects left/right shelf sections from long vertical edges.
+- Splits each section into `5` slices over an assumed `81 mm` section width.
+- Slice local centered X values are about `-32.4, -16.2, 0, +16.2, +32.4 mm`.
+- Estimates camera-relative shelf depth from known section width:
+  `depth_mm = fx * 81 / bbox_width_px`. This deliberately does not apply
+  camera-to-arm extrinsics.
+- Edge slices get the current highest decision score:
+  - slice `0`: score `30`, hint `lean_left`, support `left_wall`
+  - slice `4`: score `30`, hint `lean_right`, support `right_wall`
+- Interior slices get score `10`, hint `center`.
+- Current occupancy status is still `unknown`; occupied/free detection is a
+  future layer.
+- Verified on `测试图像/test shelf.png`:
+  - left bbox `[162, 123, 461, 1102]`
+  - right bbox `[648, 123, 460, 1102]`
+  - average camera depth `169.4 mm`
+  - overlay `/private/tmp/test_shelf_5slice_scored.png`
+- `shelf2.png` exposed an angled/side-wall view, so `shelf_scanner.py` now has
+  a strong-edge fallback when four fixed-ratio panel borders are not found.
+  Current `shelf2.png` result:
+  - left bbox `[386, 144, 465, 1152]`
+  - right bbox `[851, 144, 465, 1152]`
+  - average camera depth `167.7 mm`
+  - overlay `/private/tmp/shelf2_5slice_scored.png`
+- `shelf3.png` is a farther, more centered view. After relaxing the fallback
+  strong-edge threshold, it detects:
+  - left bbox `[632, 129, 378, 1041]`
+  - right bbox `[1010, 129, 351, 1041]`
+  - average camera depth `214.3 mm`
+  - overlay `/private/tmp/shelf3_depth_5slice_scored.png`
+  - caveat: top of the bbox includes gray background; horizontal slicing is
+    usable, but vertical shelf height should be refined later.
+
+Added `主程序代码/vision/image_preprocess.py` for shared denoise / grayscale
+cleanup / CLAHE / Canny / morphology helpers. Current integration is
+conservative:
+
+- `shelf_scanner.py` uses original grayscale edges first, then cleaned-grayscale
+  fallback if section border detection fails.
+- `ocr.py` uses original-frame PaddleOCR first, then an enhanced OCR image only
+  if the original returns no text polygons.
+- This keeps known-good OCR and shelf behavior stable while giving noisy camera
+  frames a cleanup path.
 
 ### 2026-05-11 grip/place test mode v1
 
@@ -243,12 +518,16 @@ The legacy 11-hyperparameter controller prompt also accepts blank input now and
 loads `config.DEFAULT_RUNTIME_PARAMS`, so the outer menu and the older
 controller setup layer share the same default behavior.
 
-Startup scan v1 is implemented as an independent workflow, not full Auto:
-`--startup-scan` sends base-only `-90 / 0 / +90` scan commands, captures
-`left.png`, `center.png`, and `right.png`, returns home/straight, and writes
-`sim_output/startup_scan/<timestamp>/startup_scan_snapshot.json`. Shelf section
-interpretation is preserved as `pending_or_partial` until the vision/planning
-handoff for A/B/C/D is completed.
+Startup scan is now the current two-view world-initialization workflow:
+`--startup-scan` sends base-only physical `left-90 / 0` scan commands, captures `left.png`
+and `center.png`, returns home/straight, and writes
+`sim_output/startup_scan/<timestamp>/startup_scan_snapshot.json`. The left view
+is processed by `vision.shelf_scanner`; the center view is processed by
+`vision.bin_slot_scanner` plus `vision.lateral_pose_provider`. The snapshot now
+contains shelf candidates, OCR/entity-linked bin books, pick candidates, and a
+`task_queue`. It still does not execute pick/place hardware commands.
+Hardware direction correction: physical left-90 scan uses servo000 `P2167`
+on the current arm; `P0833` was observed to rotate the wrong direction.
 
 Target-sequence transport retract update: `transport_retract` is now conditional
 instead of always inserted. If the pick point horizontal radius is `<= 240 mm`,
@@ -956,6 +1235,22 @@ MuJoCo debug entry update:
   `--run-target-sequence` for the hardware path.
 - Example:
   `python3 主程序代码/main.py --target-viewer --pick 220 0 115 --place 0 260 124.25`.
+
+## 20. 2026-05-13 Book Dimension Profiles and Tilt Metadata
+
+Vision/Auto Demo metadata update:
+- `config.py` now has two demo book size profiles:
+  `compact_200x140x8` and `tall_209x140x9`.
+- Known demo titles reference those profiles in `KNOWN_BOOK_DIMENSIONS_MM`;
+  `ocr_visible_height_mm` remains for older OCR-depth experiments.
+- `vision.lateral_pose_provider` and `vision.bin_scanner` now return
+  per-book `tilt_deg`, `tilt_direction`, `suggested_place_tilt_deg`, and
+  `book_dimensions_mm`.
+- `detected_books_loop.py` records those fields in snapshots and prints a
+  human-readable tilt description in the Auto Demo report.
+- This is metadata only: it does not yet change hardware placement wrist angle.
+  The decision layer can later map detected/source tilt to `left_wall`,
+  `right_wall`, or explicit wrist-roll placement hints.
 
 ---
 This document is intended as persistent handoff context for future AI conversations.

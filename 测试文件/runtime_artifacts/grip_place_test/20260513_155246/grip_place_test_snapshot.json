@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-05-13T15:52:46",
+  "status": "partial",
+  "output_dir": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/grip_place_test/20260513_155246",
+  "settle_seconds": 0.0,
+  "dry_run": true,
+  "place_slot": "center",
+  "pick_used": [
+    220.0,
+    0.0,
+    115.0
+  ],
+  "place_used": [
+    0.0,
+    250.0,
+    115.0
+  ],
+  "views": {
+    "left": {
+      "joint0_deg": -90,
+      "pwm": 833,
+      "sections": [
+        "shelf_reference"
+      ],
+      "description": "-90 deg reference view; saved only, no A/B/C/D interpretation",
+      "motion": {
+        "label": "left_base",
+        "command": "{#000P0833T2500!}",
+        "ok": true,
+        "dry_run": true,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/grip_place_test/20260513_155246/left_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/grip_place_test/20260513_155246/left.png",
+        "ok": false,
+        "error": "无法打开摄像头 index=0"
+      }
+    },
+    "center": {
+      "joint0_deg": 0,
+      "pwm": 1500,
+      "sections": [
+        "bin"
+      ],
+      "description": "0 deg bin view for OCR",
+      "motion": {
+        "label": "center_base",
+        "command": "{#000P1500T2500!}",
+        "ok": true,
+        "dry_run": true,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/grip_place_test/20260513_155246/center_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/grip_place_test/20260513_155246/center.png",
+        "ok": false,
+        "error": "无法打开摄像头 index=0"
+      }
+    }
+  },
+  "bin": {
+    "source_view": "center",
+    "ok": false,
+    "books": [],
+    "book_instances": [],
+    "pick_candidates": [],
+    "unknown_texts": [],
+    "error": "center frame is missing"
+  },
+  "selected_book": null,
+  "target_sequence": {
+    "ok": false,
+    "error": "MuJoCo IK failed for target [145.0, 0.0, 160.0]"
+  },
+  "errors": [
+    "target_sequence failed: MuJoCo IK failed for target [145.0, 0.0, 160.0]",
+    "left capture failed",
+    "center capture failed",
+    "bin detection failed",
+    "target sequence generation failed"
+  ],
+  "user_report_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/grip_place_test/20260513_155246/grip_place_test_report.md"
+}

@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-05-13T15:50:09",
+  "status": "partial",
+  "output_dir": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260513_155009",
+  "settle_seconds": 0.0,
+  "dry_run": true,
+  "views": {
+    "left": {
+      "joint0_deg": -90,
+      "pwm": 833,
+      "sections": [
+        "shelf"
+      ],
+      "description": "-90 deg shelf/world-context view",
+      "motion": {
+        "label": "left_base",
+        "command": "{#000P0833T2500!}",
+        "ok": true,
+        "dry_run": true,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260513_155009/left_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260513_155009/left.png",
+        "ok": false,
+        "error": "无法打开摄像头 index=0"
+      }
+    },
+    "center": {
+      "joint0_deg": 0,
+      "pwm": 1500,
+      "sections": [
+        "bin"
+      ],
+      "description": "0 deg bin view",
+      "motion": {
+        "label": "center_base",
+        "command": "{#000P1500T2500!}",
+        "ok": true,
+        "dry_run": true,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260513_155009/center_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260513_155009/center.png",
+        "ok": false,
+        "error": "无法打开摄像头 index=0"
+      }
+    }
+  },
+  "bin": {
+    "source_view": "center",
+    "ok": false,
+    "books": [],
+    "book_instances": [],
+    "pick_candidates": [],
+    "unknown_texts": [],
+    "error": "center frame is missing"
+  },
+  "shelf": {
+    "source_view": "left",
+    "ok": false,
+    "sections": [],
+    "ranked_candidates": [],
+    "error": "left frame is missing"
+  },
+  "home": {
+    "label": "home_straight",
+    "command": "{#000P1500T1500!#001P2000T1500!#002P2000T1500!#003P0850T1500!#004P1500T1500!#005P1500T1500!}",
+    "ok": true,
+    "dry_run": true,
+    "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260513_155009/home_straight_command.txt"
+  },
+  "errors": [
+    "left capture failed",
+    "center capture failed",
+    "bin detection failed",
+    "shelf scan incomplete"
+  ],
+  "planned_tasks": [],
+  "unknown_titles": [],
+  "task_queue": [],
+  "user_report_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260513_155009/startup_scan_report.md"
+}

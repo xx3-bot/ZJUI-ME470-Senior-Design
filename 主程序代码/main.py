@@ -96,9 +96,11 @@ def _prompt_choice() -> str:
     print("4. Target viewer")
     print("   Generate pick/place trajectory and open the MuJoCo animation.")
     print("5. Startup scan")
-    print("   Sweep -90/0/+90 deg, capture three frames, and save a vision snapshot.")
+    print("   Sweep left-90/0 deg, capture shelf/bin frames, and initialize a world snapshot.")
     print("6. Grip and place test")
-    print("   Capture -90/0 deg only, log OCR, and generate a fixed place dry-run.")
+    print("   Capture left-90/0 deg only, log OCR, and generate a fixed place dry-run.")
+    print("7. Auto demo / detected-books loop")
+    print("   Detect known books from one bin frame, plan a demo queue, and dry-run by default.")
     print("q. Quit")
     print()
     return _read_input("Select mode [2]: ").strip().lower() or "2"
@@ -124,6 +126,24 @@ def _prompt_int(label: str, default: int) -> int:
             return int(raw)
         except ValueError:
             print("Please enter an integer, or press Enter for the default.")
+
+
+def _prompt_optional_int(label: str, default: int | None = None) -> int | None:
+    default_text = "all" if default is None else str(default)
+    while True:
+        raw = _read_input(f"{label} [{default_text}]: ").strip().lower()
+        if raw == "":
+            return default
+        if raw in {"all", "none", "0"}:
+            return None
+        try:
+            value = int(raw)
+        except ValueError:
+            print("Please enter a positive integer, 0/all, or press Enter for the default.")
+            continue
+        if value <= 0:
+            return None
+        return value
 
 
 def _prompt_vec3(label: str, default: tuple[float, float, float]) -> tuple[float, float, float]:
@@ -177,7 +197,7 @@ def _interactive_argv() -> list[str]:
         print("Exiting.")
         raise SystemExit(0)
 
-    if choice not in {"1", "2", "3", "4", "5", "6"}:
+    if choice not in {"1", "2", "3", "4", "5", "6", "7"}:
         print("Unknown selection; defaulting to dry run.")
         choice = "2"
 
@@ -235,6 +255,20 @@ def _interactive_argv() -> list[str]:
         argv.extend(["--grip-place-slot", _prompt_place_slot("center")])
         settle = _prompt_float("Settle time at each test angle, seconds", 4.0)
         argv.extend(["--startup-scan-settle-seconds", f"{settle:g}"])
+        argv.extend(["--wait-trigger", _prompt_wait_trigger("none")])
+        return argv
+
+    if choice == "7":
+        argv.append("--auto-demo")
+        argv.append("--dry-run")
+        print("Using latest startup-scan shelf world model by default.")
+        step = _prompt_float("Demo shelf +X step per book, mm", 15.0)
+        argv.extend(["--loop-place-step-mm", f"{step:g}"])
+        max_books = _prompt_optional_int("Max books for this run (0/all = all detected)", None)
+        if max_books is not None:
+            argv.extend(["--max-loop-books", str(max_books)])
+        camera_index = _prompt_text("Camera index", "0")
+        argv.extend(["--camera-index", camera_index])
         argv.extend(["--wait-trigger", _prompt_wait_trigger("none")])
         return argv
 
@@ -344,6 +378,15 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--auto-demo",
+        action="store_true",
+        help=(
+            "Current standard demo Auto shell. Uses the detected-books loop, "
+            "records world-model state, prechecks target_sequence commands, "
+            "prints a plan, then waits for the selected trigger before hardware send."
+        ),
+    )
+    parser.add_argument(
         "--target-viewer",
         action="store_true",
         help="Simulation/debug only: generate a target-sequence trajectory from --pick/--place and open the MuJoCo viewer.",
@@ -352,8 +395,8 @@ def main() -> None:
         "--startup-scan",
         action="store_true",
         help=(
-            "Run the three-view startup scan workflow. Sends base-only scan commands, "
-            "captures left/center/right frames, returns home, and writes a snapshot JSON."
+            "Run the two-view startup scan workflow. Sends base-only left-90/0 deg commands, "
+            "captures shelf/bin frames, returns home, and writes a world snapshot JSON."
         ),
     )
     parser.add_argument(
@@ -371,7 +414,7 @@ def main() -> None:
         "--grip-place-test",
         action="store_true",
         help=(
-            "Run the minimal two-view grip/place test. Captures -90 and 0 deg views, "
+            "Run the minimal two-view grip/place test. Captures left-90 and 0 deg views, "
             "logs OCR, and generates target_sequence for a fixed test place point."
         ),
     )
@@ -385,6 +428,35 @@ def main() -> None:
         "--grip-place-output-dir",
         type=Path,
         help="Optional output root for grip/place test snapshots.",
+    )
+    parser.add_argument(
+        "--detected-loop-output-dir",
+        type=Path,
+        help="Optional output root for detected-books loop / auto-demo snapshots.",
+    )
+    parser.add_argument(
+        "--shelf-model-snapshot",
+        type=Path,
+        help=(
+            "Startup-scan snapshot JSON used to initialize shelf slots for --auto-demo/"
+            "--run-detected-books-loop. If omitted, the latest startup scan is used."
+        ),
+    )
+    parser.add_argument(
+        "--no-auto-shelf-model",
+        action="store_true",
+        help=(
+            "Disable A-route initialized shelf model lookup for --auto-demo/"
+            "--run-detected-books-loop and use --place + --loop-place-step-mm instead."
+        ),
+    )
+    parser.add_argument(
+        "--skip-auto-startup-scan",
+        action="store_true",
+        help=(
+            "For --auto-demo, reuse --shelf-model-snapshot or the latest startup scan "
+            "instead of running a fresh startup scan first."
+        ),
     )
     parser.add_argument(
         "--pick",
@@ -410,6 +482,14 @@ def main() -> None:
         type=int,
         default=115200,
         help="Serial baud rate used by --run-target-sequence.",
+    )
+    parser.add_argument(
+        "--camera-index",
+        default=None,
+        help=(
+            "Override config.RGB_CAMERA_INDEX for camera-based workflows. "
+            "Current robot-mounted camera is index 0."
+        ),
     )
     parser.add_argument(
         "--fixed-step-delay",
@@ -534,13 +614,15 @@ def main() -> None:
         or args.sim_log_path is not None
     )
 
-    if args.run_target_sequence and (args.target_viewer or args.run_detected_books_loop or sim_override_flags):
+    if args.run_target_sequence and (args.target_viewer or args.run_detected_books_loop or args.auto_demo or sim_override_flags):
         parser.error(
             "--run-target-sequence is the formal hardware-generation path. "
             "Do not combine it with --sim-mode, --viewer, --target-viewer, "
-            "--run-detected-books-loop, or simulation waypoint overrides."
+            "--run-detected-books-loop, --auto-demo, or simulation waypoint overrides."
         )
-    if args.run_detected_books_loop and (
+    if args.run_detected_books_loop and args.auto_demo:
+        parser.error("Use either --run-detected-books-loop or --auto-demo, not both.")
+    if (args.run_detected_books_loop or args.auto_demo) and (
         args.target_viewer
         or args.startup_scan
         or args.grip_place_test
@@ -549,7 +631,7 @@ def main() -> None:
         or args.pick is not None
     ):
         parser.error(
-            "--run-detected-books-loop is an independent hardware-generation path. "
+            "--run-detected-books-loop/--auto-demo is an independent hardware-generation path. "
             "Do not combine it with viewer/sim/startup/grip-place workflows or --pick."
         )
     if args.max_loop_books is not None and args.max_loop_books <= 0:
@@ -564,6 +646,7 @@ def main() -> None:
     if args.startup_scan and (
         args.run_target_sequence
         or args.run_detected_books_loop
+        or args.auto_demo
         or args.target_viewer
         or args.grip_place_test
         or args.startup_calibrate
@@ -578,6 +661,7 @@ def main() -> None:
     if args.grip_place_test and (
         args.run_target_sequence
         or args.run_detected_books_loop
+        or args.auto_demo
         or args.target_viewer
         or args.startup_scan
         or args.startup_calibrate
@@ -602,6 +686,15 @@ def main() -> None:
             float(args.fake_vision_pose[1]),
             float(args.fake_vision_pose[2]),
         )
+    if args.camera_index is not None:
+        raw_camera_index = str(args.camera_index)
+        if raw_camera_index.lower() == "auto":
+            parser.error("--camera-index auto is disabled for this hardware setup; use --camera-index 0")
+        else:
+            try:
+                config.RGB_CAMERA_INDEX = int(raw_camera_index)
+            except ValueError:
+                parser.error("--camera-index must be an integer or 'auto'")
 
     if args.startup_scan:
         from startup_scan import DEFAULT_OUTPUT_ROOT, run_startup_scan
@@ -663,78 +756,13 @@ def main() -> None:
             return
         print("[CAL] 启动校准完成")
 
-    if args.run_detected_books_loop:
-        if args.place is None:
-            parser.error("--run-detected-books-loop requires --place X Y Z")
-        print(
-            "[RUNTIME] Detected-books loop path: detecting all known books in "
-            "one camera frame, ordering by config.KNOWN_BOOK_TITLES. "
-            "The first book uses --place; each next book shifts +X by "
-            f"{args.loop_place_step_mm:g} mm.",
-            flush=True,
-        )
-        from target_sequence import (
-            HARDWARE_HOME_COMMAND,
-            ROOT,
-            TimingConfig,
-            generate_target_sequence,
-            print_command_preview,
-            send_hardware_sequence,
-            wait_for_start_trigger,
-            write_command_file,
-        )
-        from vision.lateral_pose_provider import get_all_book_pick_poses_from_camera
-
-        output_dir = ROOT / "sim_output" / "detected_books_loop" / _now_stamp()
-        snapshot_path = output_dir / "detected_books_loop_snapshot.json"
-        report_path = output_dir / "detected_books_loop_report.md"
-        loop_command_path = output_dir / "loop_hardware_command_sequence.txt"
-        snapshot = {
-            "timestamp": datetime.now().isoformat(timespec="seconds"),
-            "status": "partial",
-            "output_dir": str(output_dir),
-            "dry_run": bool(args.dry_run),
-            "place_start": [float(value) for value in args.place],
-            "place_step_mm": float(args.loop_place_step_mm),
-            "known_book_order": list(config.KNOWN_BOOK_TITLES),
-            "tasks": [],
-            "combined_command_path": str(loop_command_path),
-            "combined_command_count": 0,
-            "errors": [],
-            "notes": [
-                "Detected books are ordered by config.KNOWN_BOOK_TITLES.",
-                "Placement starts at --place and shifts along +X by loop_place_step_mm.",
-                "Intermediate per-book home commands are omitted; final book keeps measured home.",
-            ],
-        }
-
-        candidates = get_all_book_pick_poses_from_camera()
-        if args.max_loop_books is not None:
-            candidates = candidates[: args.max_loop_books]
-        if not candidates:
-            snapshot["errors"].append("no known books detected")
-            _write_json(snapshot_path, snapshot)
-            report = _build_loop_report(snapshot)
-            _write_text(report_path, report)
-            _print_report("Detected Books Loop Report", report)
-            print(f"[LOOP] Snapshot: {snapshot_path}")
-            print(f"[LOOP] Report:   {report_path}")
-            parser.error("--run-detected-books-loop: 没有检测到任何可抓取的已知书。")
-
-        print("[RUNTIME] Loop candidates:")
-        for index, candidate in enumerate(candidates, start=1):
-            pick_pose = candidate["pick"]
-            place_pose = (
-                float(args.place[0]) + (index - 1) * args.loop_place_step_mm,
-                float(args.place[1]),
-                float(args.place[2]),
+    if args.run_detected_books_loop or args.auto_demo:
+        if args.no_auto_shelf_model and args.place is None:
+            parser.error(
+                "--no-auto-shelf-model requires --place X Y Z for --run-detected-books-loop/--auto-demo"
             )
-            print(
-                f"  {index:02d}. {candidate['title']!r} "
-                f"pick=({pick_pose[0]:.1f}, {pick_pose[1]:.1f}, {pick_pose[2]:.1f}) "
-                f"place=({place_pose[0]:.1f}, {place_pose[1]:.1f}, {place_pose[2]:.1f}) "
-                f"confidence={float(candidate['confidence']):.2f}"
-            )
+        from detected_books_loop import DEFAULT_OUTPUT_ROOT, run_detected_books_loop
+        from target_sequence import TimingConfig
 
         timing = TimingConfig(
             small_move_fast_threshold_pwm=args.small_move_fast_threshold_pwm,
@@ -743,80 +771,63 @@ def main() -> None:
             medium_move_time_ms=args.medium_move_time_ms,
             normal_move_time_ms=args.normal_move_time_ms,
         )
-        combined_commands: list[str] = []
-        for index, candidate in enumerate(candidates, start=1):
-            pick_pose = tuple(candidate["pick"])
-            place_pose = (
-                float(args.place[0]) + (index - 1) * args.loop_place_step_mm,
-                float(args.place[1]),
-                float(args.place[2]),
-            )
+        shelf_model_snapshot = args.shelf_model_snapshot
+        if (
+            args.auto_demo
+            and not args.no_auto_shelf_model
+            and not args.skip_auto_startup_scan
+            and shelf_model_snapshot is None
+        ):
+            from startup_scan import DEFAULT_OUTPUT_ROOT as STARTUP_SCAN_OUTPUT_ROOT
+            from startup_scan import run_startup_scan
+
             print(
-                f"[LOOP] {index}/{len(candidates)}: generating sequence for "
-                f"{candidate['title']!r} pick=({pick_pose[0]:.1f}, "
-                f"{pick_pose[1]:.1f}, {pick_pose[2]:.1f}) "
-                f"place=({place_pose[0]:.1f}, {place_pose[1]:.1f}, {place_pose[2]:.1f})",
+                "[AUTO] Running startup scan first to initialize shelf world model. "
+                "Use --skip-auto-startup-scan to reuse an existing snapshot.",
                 flush=True,
             )
-            result = generate_target_sequence(
-                pick=pick_pose,
-                place=place_pose,
+            shelf_model_snapshot = run_startup_scan(
+                port=args.hardware_port,
+                baud=args.hardware_baud,
+                fixed_step_delay=args.fixed_step_delay,
+                settle_seconds=args.startup_scan_settle_seconds,
+                wait_trigger="none",
+                dry_run=args.dry_run,
+                output_root=args.startup_scan_output_dir or STARTUP_SCAN_OUTPUT_ROOT,
+            )
+            try:
+                startup_snapshot = json.loads(shelf_model_snapshot.read_text(encoding="utf-8"))
+            except Exception as exc:  # noqa: BLE001 - user-facing runtime guard.
+                print(f"[AUTO] Startup scan finished but snapshot could not be read: {exc}")
+                return
+            startup_slots = (startup_snapshot.get("shelf_world_model") or {}).get("slots", [])
+            if not startup_slots:
+                print(
+                    "[AUTO] Startup scan did not initialize any shelf slots, so Auto demo stopped "
+                    "before planning motion."
+                )
+                for issue in startup_snapshot.get("errors", []):
+                    print(f"[AUTO] Startup issue: {issue}")
+                print(f"[AUTO] Snapshot: {shelf_model_snapshot}")
+                return
+        try:
+            run_detected_books_loop(
+                place_start=None if args.place is None else tuple(args.place),
+                loop_place_step_mm=args.loop_place_step_mm,
+                max_loop_books=args.max_loop_books,
+                port=args.hardware_port,
+                baud=args.hardware_baud,
+                fixed_step_delay=args.fixed_step_delay,
+                wait_trigger=args.wait_trigger,
+                dry_run=args.dry_run,
                 timing=timing,
-                trajectory_path=output_dir / f"book_{index:02d}_control_trajectory.csv",
-                command_path=output_dir / f"book_{index:02d}_hardware_command_sequence.txt",
-                summary_path=output_dir / f"book_{index:02d}_TARGET_SEQUENCE_SUMMARY.md",
+                shelf_model_snapshot=shelf_model_snapshot,
+                use_initialized_shelf_model=not args.no_auto_shelf_model,
+                output_root=args.detected_loop_output_dir or DEFAULT_OUTPUT_ROOT,
+                mode_name="auto_demo" if args.auto_demo else "detected_books_loop",
             )
-            print_command_preview(result)
-            commands = list(result.commands)
-            if index < len(candidates) and commands and commands[-1] == HARDWARE_HOME_COMMAND:
-                commands = commands[:-1]
-            command_start = len(combined_commands) + 1
-            combined_commands.extend(commands)
-            command_end = len(combined_commands)
-            snapshot["tasks"].append(
-                {
-                    "index": index,
-                    "title": str(candidate["title"]),
-                    "confidence": float(candidate["confidence"]),
-                    "bbox": list(candidate["bbox"]),
-                    "pick": [float(value) for value in pick_pose],
-                    "place": [float(value) for value in place_pose],
-                    "trajectory_path": str(result.trajectory_path),
-                    "command_path": str(result.command_path),
-                    "summary_path": str(result.summary_path),
-                    "command_start": command_start,
-                    "command_end": command_end,
-                    "command_count": len(commands),
-                    "intermediate_home_omitted": index < len(candidates),
-                }
-            )
-
-        write_command_file(combined_commands, loop_command_path)
-        snapshot["combined_command_count"] = len(combined_commands)
-        snapshot["status"] = "prepared"
-        _write_json(snapshot_path, snapshot)
-        report = _build_loop_report(snapshot)
-        _write_text(report_path, report)
-        print(
-            f"[LOOP] Combined command sequence: {loop_command_path} "
-            f"({len(combined_commands)} commands for {len(candidates)} book(s))",
-            flush=True,
-        )
-        print(f"[LOOP] Snapshot: {snapshot_path}")
-        print(f"[LOOP] Report:   {report_path}")
-        wait_for_start_trigger(args.wait_trigger, dry_run=args.dry_run)
-        send_hardware_sequence(
-            command_path=loop_command_path,
-            port=args.hardware_port,
-            baud=args.hardware_baud,
-            fixed_step_delay=args.fixed_step_delay,
-            dry_run=args.dry_run,
-        )
-        snapshot["status"] = "dry_run_complete" if args.dry_run else "sent"
-        _write_json(snapshot_path, snapshot)
-        report = _build_loop_report(snapshot)
-        _write_text(report_path, report)
-        _print_report("Detected Books Loop Report", report)
+        except RuntimeError as exc:
+            parser.error(f"--run-detected-books-loop/--auto-demo: {exc}")
         return
 
     if args.target_viewer:
@@ -881,6 +892,7 @@ def main() -> None:
         from target_sequence import (
             TimingConfig,
             generate_target_sequence,
+            preflight_hardware_sender,
             print_command_preview,
             send_hardware_sequence,
             wait_for_start_trigger,
@@ -899,6 +911,7 @@ def main() -> None:
             timing=timing,
         )
         print_command_preview(result)
+        preflight_hardware_sender(args.hardware_port, dry_run=args.dry_run)
         wait_for_start_trigger(args.wait_trigger, dry_run=args.dry_run)
         send_hardware_sequence(
             command_path=result.command_path,

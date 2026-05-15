@@ -37,13 +37,17 @@ def _grab_frame() -> Optional[np.ndarray]:
 def _compose_pick_point(rel_x: float) -> Dict[str, float | str]:
     """Build the v1 candidate pick point from lateral vision output.
 
-    The current y/z assignments are temporary fixed values. Keep this as a
-    single handoff point so startup calibration can later replace them without
-    changing the output shape consumed by planning/control.
+    The arm-frame handoff is (X depth, Y lateral, Z height). Keep this as a
+    single compatibility point for older reports; the main startup scan now
+    uses lateral_pose_provider.pick_candidates for control planning.
     """
+    arm_y = (
+        float(config.CAMERA_Y_OFFSET_MM)
+        + float(config.CAMERA_PIXEL_TO_ARM_Y_SIGN) * float(rel_x)
+    )
     return {
-        "x": float(rel_x),
-        "y": float(config.BIN_PICK_DEPTH_MM),
+        "x": float(config.BIN_PICK_DEPTH_MM),
+        "y": arm_y,
         "z": float(config.BIN_PICK_GRASP_HEIGHT_MM),
         "source": "fixed_bin_pick_v1",
     }
@@ -70,6 +74,15 @@ def _hit_to_book_dict(
         "depth": float(rel_y),
         "pick_point": pick_point,
         "confidence": float(confidence),
+        "tilt_deg": float(hit.tilt_deg),
+        "tilt_direction": (
+            "top_to_right"
+            if hit.tilt_deg > 2.0
+            else "top_to_left"
+            if hit.tilt_deg < -2.0
+            else "near_vertical"
+        ),
+        "book_dimensions_mm": config.get_book_dimensions_mm(hit.matched_title),
     }
 
 

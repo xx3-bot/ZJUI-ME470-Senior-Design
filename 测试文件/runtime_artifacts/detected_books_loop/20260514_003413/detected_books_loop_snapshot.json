@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-05-14T00:34:13",
+  "mode": "auto_demo",
+  "status": "failed",
+  "output_dir": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260514_003413",
+  "dry_run": false,
+  "place_start": [
+    0.0,
+    250.0,
+    140.0
+  ],
+  "place_step_mm": 15.0,
+  "known_book_order": [
+    "羊皮卷",
+    "习近平新时代中国特色社会主义思想概论",
+    "聊斋志异",
+    "毛泽东思想概况",
+    "人性的弱点",
+    "鬼谷子",
+    "墨菲定律"
+  ],
+  "tasks": [],
+  "skipped_tasks": [
+    {
+      "index": 1,
+      "title": "羊皮卷",
+      "pick": [
+        320.0,
+        56.346557768480764,
+        115.0
+      ],
+      "place": [
+        0.0,
+        250.0,
+        140.0
+      ],
+      "human_pick": "+Y/right-side of the bin",
+      "human_place": "demo shelf slot 1 at X=0 mm",
+      "reason": "target_sequence failed: MuJoCo IK failed for target [320.0, 56.346557768480764, 115.0]"
+    }
+  ],
+  "unknown_texts": [],
+  "combined_command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260514_003413/loop_hardware_command_sequence.txt",
+  "combined_command_count": 0,
+  "errors": [
+    "no feasible target sequences were generated"
+  ],
+  "world_model": {
+    "bin_books": [
+      "羊皮卷"
+    ],
+    "planned_placements": [
+      {
+        "title": "羊皮卷",
+        "place": [
+          0.0,
+          250.0,
+          140.0
+        ],
+        "source": "fixed_demo_shelf_model"
+      }
+    ],
+    "planned_placements_human": [
+      "羊皮卷 -> demo shelf slot 1"
+    ],
+    "occupied_demo_shelf_x": [],
+    "occupied_demo_shelf_slots": [],
+    "blocked_reasons": {
+      "羊皮卷": "target_sequence failed: MuJoCo IK failed for target [320.0, 56.346557768480764, 115.0]"
+    }
+  },
+  "notes": [
+    "Vision provides bin pick candidates through vision.lateral_pose_provider.",
+    "The temporary shelf placement provider starts at --place and shifts along +X.",
+    "WorldModel records detected books, planned placements, and occupied demo shelf positions.",
+    "target_sequence.py remains the only hardware command-generation path.",
+    "Intermediate per-book home commands are omitted; final book keeps measured home."
+  ]
+}

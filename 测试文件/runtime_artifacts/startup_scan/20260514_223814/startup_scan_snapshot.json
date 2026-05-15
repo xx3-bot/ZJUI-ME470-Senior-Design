@@ -1,0 +1,93 @@
+{
+  "timestamp": "2026-05-14T22:38:23",
+  "status": "partial",
+  "output_dir": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_223814",
+  "settle_seconds": 4.0,
+  "dry_run": false,
+  "views": {
+    "left": {
+      "joint0_deg": -90,
+      "pwm": 2167,
+      "sections": [
+        "shelf"
+      ],
+      "description": "left 90 deg shelf/world-context view",
+      "motion": {
+        "label": "left_base",
+        "command": "{#000P2167T2500!}",
+        "ok": true,
+        "dry_run": false,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_223814/left_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_223814/left.png",
+        "ok": false,
+        "error": "无法打开摄像头 index=0"
+      }
+    },
+    "center": {
+      "joint0_deg": 0,
+      "pwm": 1500,
+      "sections": [
+        "bin"
+      ],
+      "description": "0 deg bin view",
+      "motion": {
+        "label": "center_base",
+        "command": "{#000P1500T2500!}",
+        "ok": true,
+        "dry_run": false,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_223814/center_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_223814/center.png",
+        "ok": false,
+        "error": "无法打开摄像头 index=0"
+      }
+    }
+  },
+  "bin": {
+    "source_view": "center",
+    "ok": false,
+    "books": [],
+    "book_instances": [],
+    "pick_candidates": [],
+    "unknown_texts": [],
+    "error": "center frame is missing"
+  },
+  "shelf": {
+    "source_view": "left",
+    "ok": false,
+    "sections": [],
+    "ranked_candidates": [],
+    "error": "left frame is missing"
+  },
+  "shelf_world_model": {
+    "source": "startup_scan_left_view",
+    "strategy": "A_initialize_once_then_update_world_model",
+    "coordinate_note": "Temporary demo arm-frame placement model: X comes from initialized shelf slice; Y/Z are fixed demo safety values from config.",
+    "place_y_mm": 250.0,
+    "place_z_mm": 140.0,
+    "section_width_mm": 81.0,
+    "section_gap_mm": 0.0,
+    "sections": [],
+    "slots": []
+  },
+  "home": {
+    "label": "home_straight",
+    "command": "{#000P1500T1500!#001P2000T1500!#002P2000T1500!#003P0850T1500!#004P1500T1500!#005P1500T1500!}",
+    "ok": true,
+    "dry_run": false,
+    "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_223814/home_straight_command.txt"
+  },
+  "errors": [
+    "left capture failed",
+    "center capture failed",
+    "bin detection failed",
+    "shelf scan incomplete"
+  ],
+  "planned_tasks": [],
+  "unknown_titles": [],
+  "task_queue": [],
+  "user_report_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_223814/startup_scan_report.md"
+}

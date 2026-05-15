@@ -1,0 +1,658 @@
+{
+  "timestamp": "2026-05-14T23:15:13",
+  "status": "partial",
+  "output_dir": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_231507",
+  "settle_seconds": 4.0,
+  "dry_run": false,
+  "views": {
+    "left": {
+      "joint0_deg": -90,
+      "pwm": 2167,
+      "sections": [
+        "shelf"
+      ],
+      "description": "left 90 deg shelf/world-context view",
+      "motion": {
+        "label": "left_base",
+        "command": "{#000P2167T2500!}",
+        "ok": true,
+        "dry_run": false,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_231507/left_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_231507/left.png",
+        "ok": true
+      }
+    },
+    "center": {
+      "joint0_deg": 0,
+      "pwm": 1500,
+      "sections": [
+        "bin"
+      ],
+      "description": "0 deg bin view",
+      "motion": {
+        "label": "center_base",
+        "command": "{#000P1500T2500!}",
+        "ok": true,
+        "dry_run": false,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_231507/center_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_231507/center.png",
+        "ok": true
+      }
+    }
+  },
+  "bin": {
+    "source_view": "center",
+    "ok": true,
+    "books": [
+      {
+        "title": "墨菲定律",
+        "rel_x": -47.967868491557454,
+        "rel_y": 229.8,
+        "rel_z": 51.84452644781441,
+        "left_edge": -52.979187522066916,
+        "right_edge": -42.956549461048,
+        "depth": 229.8,
+        "pick_point": {
+          "x": 320.0,
+          "y": 47.967868491557454,
+          "z": 115.0,
+          "source": "fixed_bin_pick_v1"
+        },
+        "confidence": 0.9984893798828125,
+        "tilt_deg": 0.0,
+        "tilt_direction": "near_vertical",
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        }
+      },
+      {
+        "title": "羊皮卷",
+        "rel_x": 74.33217927682819,
+        "rel_y": 229.8,
+        "rel_z": 65.18380272200511,
+        "left_edge": 69.20154312654469,
+        "right_edge": 79.46281542711168,
+        "depth": 229.8,
+        "pick_point": {
+          "x": 320.0,
+          "y": -74.33217927682819,
+          "z": 115.0,
+          "source": "fixed_bin_pick_v1"
+        },
+        "confidence": 0.9978371262550354,
+        "tilt_deg": 0.0,
+        "tilt_direction": "near_vertical",
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 33.0
+        }
+      }
+    ],
+    "book_instances": [
+      {
+        "title": "墨菲定律",
+        "confidence": 0.9984893798828125,
+        "ocr_bbox": [
+          387,
+          37,
+          429,
+          244
+        ],
+        "entity_bbox": [
+          7,
+          54,
+          418,
+          648
+        ],
+        "raw_entity_bbox": [
+          0,
+          0,
+          424,
+          720
+        ],
+        "entity_quad": [
+          [
+            7,
+            54
+          ],
+          [
+            418,
+            54
+          ],
+          [
+            418,
+            648
+          ],
+          [
+            7,
+            648
+          ]
+        ],
+        "ocr_tilt_deg": 0.0,
+        "entity_tilt_deg": 1.5385664701461792,
+        "association_score": 0.8508546039805956,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        },
+        "source": "ocr_edge_entity_v1"
+      },
+      {
+        "title": "羊皮卷",
+        "confidence": 0.9978371262550354,
+        "ocr_bbox": [
+          899,
+          20,
+          942,
+          149
+        ],
+        "entity_bbox": [
+          905,
+          28,
+          1215,
+          651
+        ],
+        "raw_entity_bbox": [
+          903,
+          0,
+          1280,
+          720
+        ],
+        "entity_quad": [
+          [
+            905,
+            28
+          ],
+          [
+            1215,
+            28
+          ],
+          [
+            1215,
+            651
+          ],
+          [
+            905,
+            651
+          ]
+        ],
+        "ocr_tilt_deg": 0.0,
+        "entity_tilt_deg": -4.224403381347656,
+        "association_score": 0.8883139534883722,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 33.0
+        },
+        "source": "ocr_edge_entity_v1"
+      }
+    ],
+    "pick_candidates": [
+      {
+        "title": "羊皮卷",
+        "pick": [
+          293.1,
+          -65.46516857747163,
+          115.0
+        ],
+        "confidence": 0.9978371262550354,
+        "bbox": [
+          899,
+          20,
+          942,
+          149
+        ],
+        "pick_depth_source": "visible_bin_grid",
+        "bin_grid_geometry": {
+          "status": "complete",
+          "camera_depth_mm": 212.9,
+          "arm_depth_mm": 303.1,
+          "median_arm_depth_mm": 256.2,
+          "selected_span": {
+            "kind": "yellow_segment",
+            "x1_px": 519,
+            "x2_px": 665,
+            "width_px": 147,
+            "matched_width_mm": 32.5,
+            "camera_depth_mm": 212.9,
+            "arm_depth_mm": 303.1,
+            "confidence": 0.869
+          },
+          "depth_method": "visible_bin_grid_local_spans_with_camera_extrinsics",
+          "fx_scaled_px": 962.98,
+          "camera_x_offset_mm": 90.2,
+          "roi_px": [
+            486,
+            504,
+            819,
+            706
+          ],
+          "known_spans_mm": [
+            5.0,
+            10.0,
+            12.5,
+            15.0,
+            20.0,
+            22.5,
+            25.0,
+            32.5
+          ],
+          "camera_depth_plausible_range_mm": [
+            90.0,
+            260.0
+          ],
+          "arm_depth_plausible_range_mm": [
+            190.0,
+            340.0
+          ],
+          "edge_peaks_px": [
+            719,
+            754,
+            765,
+            776,
+            808
+          ],
+          "spans": [
+            {
+              "kind": "yellow_segment",
+              "x1_px": 519,
+              "x2_px": 665,
+              "width_px": 147,
+              "matched_width_mm": 32.5,
+              "camera_depth_mm": 212.9,
+              "arm_depth_mm": 303.1,
+              "confidence": 0.869
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 677,
+              "x2_px": 709,
+              "width_px": 33,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 145.9,
+              "arm_depth_mm": 236.1,
+              "confidence": 0.012
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 723,
+              "x2_px": 751,
+              "width_px": 29,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 166.0,
+              "arm_depth_mm": 256.2,
+              "confidence": 0.215
+            }
+          ]
+        },
+        "tilt_deg": 0.0,
+        "tilt_direction": "near_vertical",
+        "suggested_place_tilt_deg": 0.0,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 33.0
+        }
+      },
+      {
+        "title": "墨菲定律",
+        "pick": [
+          293.1,
+          42.28829204700185,
+          115.0
+        ],
+        "confidence": 0.9984893798828125,
+        "bbox": [
+          387,
+          37,
+          429,
+          244
+        ],
+        "pick_depth_source": "visible_bin_grid",
+        "bin_grid_geometry": {
+          "status": "complete",
+          "camera_depth_mm": 212.9,
+          "arm_depth_mm": 303.1,
+          "median_arm_depth_mm": 256.2,
+          "selected_span": {
+            "kind": "yellow_segment",
+            "x1_px": 519,
+            "x2_px": 665,
+            "width_px": 147,
+            "matched_width_mm": 32.5,
+            "camera_depth_mm": 212.9,
+            "arm_depth_mm": 303.1,
+            "confidence": 0.869
+          },
+          "depth_method": "visible_bin_grid_local_spans_with_camera_extrinsics",
+          "fx_scaled_px": 962.98,
+          "camera_x_offset_mm": 90.2,
+          "roi_px": [
+            486,
+            504,
+            819,
+            706
+          ],
+          "known_spans_mm": [
+            5.0,
+            10.0,
+            12.5,
+            15.0,
+            20.0,
+            22.5,
+            25.0,
+            32.5
+          ],
+          "camera_depth_plausible_range_mm": [
+            90.0,
+            260.0
+          ],
+          "arm_depth_plausible_range_mm": [
+            190.0,
+            340.0
+          ],
+          "edge_peaks_px": [
+            719,
+            754,
+            765,
+            776,
+            808
+          ],
+          "spans": [
+            {
+              "kind": "yellow_segment",
+              "x1_px": 519,
+              "x2_px": 665,
+              "width_px": 147,
+              "matched_width_mm": 32.5,
+              "camera_depth_mm": 212.9,
+              "arm_depth_mm": 303.1,
+              "confidence": 0.869
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 677,
+              "x2_px": 709,
+              "width_px": 33,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 145.9,
+              "arm_depth_mm": 236.1,
+              "confidence": 0.012
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 723,
+              "x2_px": 751,
+              "width_px": 29,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 166.0,
+              "arm_depth_mm": 256.2,
+              "confidence": 0.215
+            }
+          ]
+        },
+        "tilt_deg": 0.0,
+        "tilt_direction": "near_vertical",
+        "suggested_place_tilt_deg": 0.0,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        }
+      }
+    ],
+    "unknown_texts": [],
+    "book_count": 2,
+    "book_instances_overlay_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_231507/center_book_instances_overlay.png",
+    "bin_grid_geometry": {
+      "status": "complete",
+      "camera_depth_mm": 212.9,
+      "arm_depth_mm": 303.1,
+      "median_arm_depth_mm": 256.2,
+      "selected_span": {
+        "kind": "yellow_segment",
+        "x1_px": 519,
+        "x2_px": 665,
+        "width_px": 147,
+        "matched_width_mm": 32.5,
+        "camera_depth_mm": 212.9,
+        "arm_depth_mm": 303.1,
+        "confidence": 0.869
+      },
+      "depth_method": "visible_bin_grid_local_spans_with_camera_extrinsics",
+      "fx_scaled_px": 962.98,
+      "camera_x_offset_mm": 90.2,
+      "roi_px": [
+        486,
+        504,
+        819,
+        706
+      ],
+      "known_spans_mm": [
+        5.0,
+        10.0,
+        12.5,
+        15.0,
+        20.0,
+        22.5,
+        25.0,
+        32.5
+      ],
+      "camera_depth_plausible_range_mm": [
+        90.0,
+        260.0
+      ],
+      "arm_depth_plausible_range_mm": [
+        190.0,
+        340.0
+      ],
+      "edge_peaks_px": [
+        719,
+        754,
+        765,
+        776,
+        808
+      ],
+      "spans": [
+        {
+          "kind": "yellow_segment",
+          "x1_px": 519,
+          "x2_px": 665,
+          "width_px": 147,
+          "matched_width_mm": 32.5,
+          "camera_depth_mm": 212.9,
+          "arm_depth_mm": 303.1,
+          "confidence": 0.869
+        },
+        {
+          "kind": "yellow_segment",
+          "x1_px": 677,
+          "x2_px": 709,
+          "width_px": 33,
+          "matched_width_mm": 5.0,
+          "camera_depth_mm": 145.9,
+          "arm_depth_mm": 236.1,
+          "confidence": 0.012
+        },
+        {
+          "kind": "yellow_segment",
+          "x1_px": 723,
+          "x2_px": 751,
+          "width_px": 29,
+          "matched_width_mm": 5.0,
+          "camera_depth_mm": 166.0,
+          "arm_depth_mm": 256.2,
+          "confidence": 0.215
+        }
+      ]
+    },
+    "bin_grid_overlay_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_231507/center_bin_grid_overlay.png"
+  },
+  "shelf": {
+    "source_view": "left",
+    "ok": false,
+    "sections": [],
+    "ranked_candidates": [],
+    "status": "no_sections_detected",
+    "section_width_mm": 81.0,
+    "camera_depth_mm": null,
+    "depth_method": "known_section_width_pinhole",
+    "depth_note": "Camera-relative depth only; no camera-to-arm extrinsics applied.",
+    "slice_count": 5,
+    "fixed_z_mm": 140.0,
+    "overlay_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_231507/left_shelf_overlay.png"
+  },
+  "shelf_world_model": {
+    "source": "startup_scan_left_view",
+    "strategy": "A_initialize_once_then_update_world_model",
+    "coordinate_note": "Temporary demo arm-frame placement model: X comes from initialized shelf slice; Y/Z are fixed demo safety values from config.",
+    "place_y_mm": 250.0,
+    "place_z_mm": 140.0,
+    "section_width_mm": 81.0,
+    "section_gap_mm": 0.0,
+    "sections": [],
+    "slots": []
+  },
+  "home": {
+    "label": "home_straight",
+    "command": "{#000P1500T1500!#001P2000T1500!#002P2000T1500!#003P0850T1500!#004P1500T1500!#005P1500T1500!}",
+    "ok": true,
+    "dry_run": false,
+    "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_231507/home_straight_command.txt"
+  },
+  "errors": [
+    "shelf scan incomplete"
+  ],
+  "planned_tasks": [
+    {
+      "title": "墨菲定律",
+      "target_zone": "C_right",
+      "thickness_mm": 18.0,
+      "confidence": 0.9984893798828125,
+      "pick_point": {
+        "x": 320.0,
+        "y": 47.967868491557454,
+        "z": 115.0,
+        "source": "fixed_bin_pick_v1"
+      }
+    },
+    {
+      "title": "羊皮卷",
+      "target_zone": "A_right",
+      "thickness_mm": 7.0,
+      "confidence": 0.9978371262550354,
+      "pick_point": {
+        "x": 320.0,
+        "y": -74.33217927682819,
+        "z": 115.0,
+        "source": "fixed_bin_pick_v1"
+      }
+    }
+  ],
+  "unknown_titles": [],
+  "task_queue": [
+    {
+      "index": 1,
+      "title": "羊皮卷",
+      "confidence": 0.9978371262550354,
+      "pick": [
+        293.1,
+        -65.46516857747163,
+        115.0
+      ],
+      "pick_source": "center_view_lateral_pose_provider",
+      "entity_bbox": [
+        905,
+        28,
+        1215,
+        651
+      ],
+      "raw_entity_bbox": [
+        903,
+        0,
+        1280,
+        720
+      ],
+      "ocr_bbox": [
+        899,
+        20,
+        942,
+        149
+      ],
+      "tilt_deg": 0.0,
+      "book_dimensions_mm": {
+        "size_profile": "compact_200x140x8",
+        "spine_height": 200.0,
+        "cover_width": 140.0,
+        "thickness": 8.0,
+        "ocr_visible_height_mm": 33.0
+      },
+      "shelf_candidate": null,
+      "place": null,
+      "place_status": "pending_no_shelf_candidate",
+      "execution_status": "planned_only_not_sent"
+    },
+    {
+      "index": 2,
+      "title": "墨菲定律",
+      "confidence": 0.9984893798828125,
+      "pick": [
+        293.1,
+        42.28829204700185,
+        115.0
+      ],
+      "pick_source": "center_view_lateral_pose_provider",
+      "entity_bbox": [
+        7,
+        54,
+        418,
+        648
+      ],
+      "raw_entity_bbox": [
+        0,
+        0,
+        424,
+        720
+      ],
+      "ocr_bbox": [
+        387,
+        37,
+        429,
+        244
+      ],
+      "tilt_deg": 0.0,
+      "book_dimensions_mm": {
+        "size_profile": "compact_200x140x8",
+        "spine_height": 200.0,
+        "cover_width": 140.0,
+        "thickness": 8.0,
+        "ocr_visible_height_mm": 95.0
+      },
+      "shelf_candidate": null,
+      "place": null,
+      "place_status": "pending_no_shelf_candidate",
+      "execution_status": "planned_only_not_sent"
+    }
+  ],
+  "user_report_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_231507/startup_scan_report.md"
+}

@@ -1,0 +1,106 @@
+{
+  "timestamp": "2026-05-13T01:26:02",
+  "mode": "auto_demo",
+  "status": "sent",
+  "output_dir": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260513_012602",
+  "dry_run": false,
+  "place_start": [
+    0.0,
+    250.0,
+    135.0
+  ],
+  "place_step_mm": 15.0,
+  "known_book_order": [
+    "羊皮卷",
+    "习近平新时代中国特色社会主义思想概论",
+    "聊斋志异",
+    "毛泽东思想概况",
+    "人性的弱点",
+    "鬼谷子",
+    "墨菲定律"
+  ],
+  "tasks": [
+    {
+      "index": 1,
+      "source_candidate_index": 1,
+      "title": "羊皮卷",
+      "confidence": 0.9990124702453613,
+      "bbox": [
+        251,
+        79,
+        315,
+        246
+      ],
+      "pick": [
+        250.0,
+        54.00073160019282,
+        115.0
+      ],
+      "place": [
+        0.0,
+        250.0,
+        135.0
+      ],
+      "human_pick": "+Y/right-side of the bin",
+      "human_place": "demo shelf slot 1 at X=0 mm",
+      "trajectory_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260513_012602/book_01_control_trajectory.csv",
+      "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260513_012602/book_01_hardware_command_sequence.txt",
+      "summary_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260513_012602/book_01_TARGET_SEQUENCE_SUMMARY.md",
+      "command_start": 1,
+      "command_end": 14,
+      "command_count": 14,
+      "intermediate_home_omitted": false,
+      "placement_source": "fixed_demo_shelf_model"
+    }
+  ],
+  "skipped_tasks": [],
+  "unknown_texts": [
+    {
+      "text": "117",
+      "confidence": 0.49862241744995117,
+      "bbox": [
+        332,
+        112,
+        407,
+        273
+      ],
+      "reason": "recognized OCR text did not match KNOWN_BOOK_TITLES"
+    }
+  ],
+  "combined_command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260513_012602/loop_hardware_command_sequence.txt",
+  "combined_command_count": 14,
+  "errors": [],
+  "world_model": {
+    "bin_books": [
+      "羊皮卷"
+    ],
+    "planned_placements": [
+      {
+        "title": "羊皮卷",
+        "place": [
+          0.0,
+          250.0,
+          135.0
+        ],
+        "source": "fixed_demo_shelf_model"
+      }
+    ],
+    "planned_placements_human": [
+      "羊皮卷 -> demo shelf slot 1"
+    ],
+    "occupied_demo_shelf_x": [
+      0.0
+    ],
+    "occupied_demo_shelf_slots": [
+      "demo shelf slot 1 (羊皮卷)"
+    ],
+    "blocked_reasons": {}
+  },
+  "notes": [
+    "Vision provides bin pick candidates through vision.lateral_pose_provider.",
+    "The temporary shelf placement provider starts at --place and shifts along +X.",
+    "WorldModel records detected books, planned placements, and occupied demo shelf positions.",
+    "target_sequence.py remains the only hardware command-generation path.",
+    "Intermediate per-book home commands are omitted; final book keeps measured home."
+  ]
+}

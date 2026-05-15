@@ -1,0 +1,273 @@
+{
+  "timestamp": "2026-05-15T18:10:15",
+  "mode": "auto_demo",
+  "status": "failed",
+  "output_dir": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260515_181015",
+  "dry_run": false,
+  "place_start": null,
+  "place_step_mm": 15.0,
+  "shelf_model_source": "initialized_shelf_world_model",
+  "shelf_model_snapshot": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260515_180953/startup_scan_snapshot.json",
+  "initialized_shelf_slot_count": 10,
+  "known_book_order": [
+    "羊皮卷",
+    "习近平新时代中国特色社会主义思想概论",
+    "聊斋志异",
+    "毛泽东思想概况",
+    "人性的弱点",
+    "鬼谷子",
+    "墨菲定律"
+  ],
+  "tasks": [],
+  "skipped_tasks": [
+    {
+      "index": 1,
+      "title": "羊皮卷",
+      "pick": [
+        320.9,
+        5.990098756231914,
+        115.0
+      ],
+      "place": [
+        20.1,
+        250.0,
+        140.0
+      ],
+      "human_pick": "near the bin center",
+      "human_place": "shelf B slice 0 (lean_left) at X=20 mm",
+      "reason": "target_sequence failed: MuJoCo IK failed for target [320.9, 5.990098756231914, 115.0]"
+    },
+    {
+      "index": 2,
+      "title": "人性的弱点",
+      "pick": [
+        320.9,
+        -70.00025466610263,
+        115.0
+      ],
+      "place": [
+        20.1,
+        250.0,
+        140.0
+      ],
+      "human_pick": "-Y/left-side of the bin",
+      "human_place": "shelf B slice 0 (lean_left) at X=20 mm",
+      "reason": "target_sequence failed: MuJoCo IK failed for target [320.9, -70.00025466610263, 115.0]"
+    },
+    {
+      "index": 3,
+      "title": "墨菲定律",
+      "pick": [
+        320.9,
+        81.0706175500426,
+        115.0
+      ],
+      "place": [
+        20.1,
+        250.0,
+        140.0
+      ],
+      "human_pick": "+Y/right-side of the bin",
+      "human_place": "shelf B slice 0 (lean_left) at X=20 mm",
+      "reason": "target_sequence failed: MuJoCo IK failed for target [320.9, 81.0706175500426, 115.0]"
+    }
+  ],
+  "unknown_texts": [],
+  "combined_command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/detected_books_loop/20260515_181015/loop_hardware_command_sequence.txt",
+  "combined_command_count": 0,
+  "errors": [
+    "no feasible target sequences were generated"
+  ],
+  "world_model": {
+    "bin_books": [
+      "羊皮卷",
+      "人性的弱点",
+      "墨菲定律"
+    ],
+    "planned_placements": [
+      {
+        "title": "羊皮卷",
+        "place": [
+          20.1,
+          250.0,
+          140.0
+        ],
+        "source": "initialized_shelf_world_model",
+        "shelf_slot": {
+          "slot_id": "right:0",
+          "section_id": "right",
+          "section_label": "B",
+          "slice_index": 0,
+          "place": [
+            20.1,
+            250.0,
+            140.0
+          ],
+          "raw_place_x_mm": 8.1,
+          "edge_inset_mm": 12.0,
+          "status": "free_candidate",
+          "score": 39.44,
+          "support_side": "left_wall",
+          "placement_hint": "lean_left",
+          "occupancy_score": 0.0,
+          "center_px": [
+            643.2,
+            622.0
+          ],
+          "quad_px": [
+            [
+              628,
+              566
+            ],
+            [
+              659,
+              566
+            ],
+            [
+              660,
+              678
+            ],
+            [
+              626,
+              678
+            ]
+          ],
+          "occupied": false,
+          "source": "startup_scan_initialized_shelf",
+          "rank": 1
+        }
+      },
+      {
+        "title": "人性的弱点",
+        "place": [
+          -20.1,
+          250.0,
+          140.0
+        ],
+        "source": "initialized_shelf_world_model",
+        "shelf_slot": {
+          "slot_id": "left:4",
+          "section_id": "left",
+          "section_label": "A",
+          "slice_index": 4,
+          "place": [
+            -20.1,
+            250.0,
+            140.0
+          ],
+          "raw_place_x_mm": -8.1,
+          "edge_inset_mm": -12.0,
+          "status": "free_candidate",
+          "score": 38.39,
+          "support_side": "right_wall",
+          "placement_hint": "lean_right",
+          "occupancy_score": 0.0,
+          "center_px": [
+            537.5,
+            624.0
+          ],
+          "quad_px": [
+            [
+              519,
+              569
+            ],
+            [
+              545,
+              569
+            ],
+            [
+              564,
+              679
+            ],
+            [
+              522,
+              679
+            ]
+          ],
+          "occupied": false,
+          "source": "startup_scan_initialized_shelf",
+          "rank": 2
+        }
+      },
+      {
+        "title": "墨菲定律",
+        "place": [
+          60.9,
+          250.0,
+          140.0
+        ],
+        "source": "initialized_shelf_world_model",
+        "shelf_slot": {
+          "slot_id": "right:4",
+          "section_id": "right",
+          "section_label": "B",
+          "slice_index": 4,
+          "place": [
+            60.9,
+            250.0,
+            140.0
+          ],
+          "raw_place_x_mm": 72.9,
+          "edge_inset_mm": -12.0,
+          "status": "free_candidate",
+          "score": 36.01,
+          "support_side": "right_wall",
+          "placement_hint": "lean_right",
+          "occupancy_score": 0.0,
+          "center_px": [
+            772.8,
+            622.0
+          ],
+          "quad_px": [
+            [
+              752,
+              566
+            ],
+            [
+              783,
+              566
+            ],
+            [
+              795,
+              678
+            ],
+            [
+              761,
+              678
+            ]
+          ],
+          "occupied": false,
+          "source": "startup_scan_initialized_shelf",
+          "rank": 3
+        }
+      }
+    ],
+    "planned_placements_human": [
+      "羊皮卷 -> demo shelf slot 1",
+      "人性的弱点 -> demo shelf slot 2",
+      "墨菲定律 -> demo shelf slot 3"
+    ],
+    "occupied_demo_shelf_x": [],
+    "occupied_demo_shelf_slots": [],
+    "initialized_shelf_model": {
+      "source": "startup_scan_left_view",
+      "slot_count": 10,
+      "free_slot_count": 10,
+      "occupied_slots": []
+    },
+    "blocked_reasons": {
+      "羊皮卷": "target_sequence failed: MuJoCo IK failed for target [320.9, 5.990098756231914, 115.0]",
+      "人性的弱点": "target_sequence failed: MuJoCo IK failed for target [320.9, -70.00025466610263, 115.0]",
+      "墨菲定律": "target_sequence failed: MuJoCo IK failed for target [320.9, 81.0706175500426, 115.0]"
+    }
+  },
+  "notes": [
+    "Vision provides bin pick candidates through vision.lateral_pose_provider.",
+    "A-route shelf logic: startup scan initializes shelf slots; execution updates WorldModel occupancy.",
+    "WorldModel records detected books, planned placements, and occupied demo shelf positions.",
+    "target_sequence.py remains the only hardware command-generation path.",
+    "Intermediate per-book home commands are omitted; final book keeps measured home."
+  ],
+  "bin_candidate_source": "startup_scan_snapshot",
+  "bin_candidate_snapshot": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260515_180953/startup_scan_snapshot.json"
+}

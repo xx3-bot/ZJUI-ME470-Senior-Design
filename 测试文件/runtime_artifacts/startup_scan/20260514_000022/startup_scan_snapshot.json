@@ -1,0 +1,1377 @@
+{
+  "timestamp": "2026-05-14T00:00:24",
+  "status": "complete",
+  "output_dir": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_000022",
+  "settle_seconds": 4.0,
+  "dry_run": false,
+  "views": {
+    "left": {
+      "joint0_deg": -90,
+      "pwm": 2167,
+      "sections": [
+        "shelf"
+      ],
+      "description": "left 90 deg shelf/world-context view",
+      "motion": {
+        "label": "left_base",
+        "command": "{#000P2167T2500!}",
+        "ok": true,
+        "dry_run": false,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_000022/left_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_000022/left.png",
+        "ok": true
+      }
+    },
+    "center": {
+      "joint0_deg": 0,
+      "pwm": 1500,
+      "sections": [
+        "bin"
+      ],
+      "description": "0 deg bin view",
+      "motion": {
+        "label": "center_base",
+        "command": "{#000P1500T2500!}",
+        "ok": true,
+        "dry_run": false,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_000022/center_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_000022/center.png",
+        "ok": true
+      }
+    }
+  },
+  "bin": {
+    "source_view": "center",
+    "ok": true,
+    "books": [
+      {
+        "title": "羊皮卷",
+        "rel_x": -16.488398512949384,
+        "rel_y": 169.8,
+        "rel_z": 33.995905590165115,
+        "left_edge": -19.926787679910277,
+        "right_edge": -13.050009345988492,
+        "depth": 169.8,
+        "pick_point": {
+          "x": -16.488398512949384,
+          "y": 260.0,
+          "z": 115.0,
+          "source": "fixed_bin_pick_v1"
+        },
+        "confidence": 0.999041736125946,
+        "tilt_deg": 0.0,
+        "tilt_direction": "near_vertical",
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 33.0
+        }
+      },
+      {
+        "title": "鬼谷子",
+        "rel_x": 5.464393860724004,
+        "rel_y": 169.8,
+        "rel_z": 12.786966301452217,
+        "left_edge": 2.114168518556981,
+        "right_edge": 8.814619202891027,
+        "depth": 169.8,
+        "pick_point": {
+          "x": 5.464393860724004,
+          "y": 260.0,
+          "z": 115.0,
+          "source": "fixed_bin_pick_v1"
+        },
+        "confidence": 0.7360738962888718,
+        "tilt_deg": 0.0,
+        "tilt_direction": "near_vertical",
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 70.0
+        }
+      },
+      {
+        "title": "墨菲定律",
+        "rel_x": 26.447384161664836,
+        "rel_y": 169.8,
+        "rel_z": 27.659624972790315,
+        "left_edge": 22.5681758707346,
+        "right_edge": 30.326592452595072,
+        "depth": 169.8,
+        "pick_point": {
+          "x": 26.447384161664836,
+          "y": 260.0,
+          "z": 115.0,
+          "source": "fixed_bin_pick_v1"
+        },
+        "confidence": 0.9991885423660278,
+        "tilt_deg": -0.552231376575232,
+        "tilt_direction": "near_vertical",
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        }
+      },
+      {
+        "title": "人性的弱点",
+        "rel_x": 48.66466800971983,
+        "rel_y": 169.8,
+        "rel_z": 35.57997574450882,
+        "left_edge": 44.96178736837733,
+        "right_edge": 52.36754865106233,
+        "depth": 169.8,
+        "pick_point": {
+          "x": 48.66466800971983,
+          "y": 260.0,
+          "z": 115.0,
+          "source": "fixed_bin_pick_v1"
+        },
+        "confidence": 0.9816524386405945,
+        "tilt_deg": 0.0,
+        "tilt_direction": "near_vertical",
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        }
+      }
+    ],
+    "book_instances": [
+      {
+        "title": "羊皮卷",
+        "confidence": 0.999041736125946,
+        "ocr_bbox": [
+          496,
+          105,
+          535,
+          225
+        ],
+        "entity_bbox": [
+          324,
+          35,
+          548,
+          693
+        ],
+        "raw_entity_bbox": [
+          289,
+          0,
+          563,
+          720
+        ],
+        "entity_quad": [
+          [
+            324,
+            35
+          ],
+          [
+            548,
+            35
+          ],
+          [
+            548,
+            693
+          ],
+          [
+            324,
+            693
+          ]
+        ],
+        "ocr_tilt_deg": 0.0,
+        "entity_tilt_deg": 2.0809216499328613,
+        "association_score": 0.9467633928571428,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 33.0
+        },
+        "source": "ocr_edge_entity_v1"
+      },
+      {
+        "title": "鬼谷子",
+        "confidence": 0.7360738962888718,
+        "ocr_bbox": [
+          621,
+          66,
+          659,
+          505
+        ],
+        "entity_bbox": [
+          556,
+          33,
+          655,
+          689
+        ],
+        "raw_entity_bbox": [
+          551,
+          0,
+          659,
+          720
+        ],
+        "entity_quad": [
+          [
+            556,
+            33
+          ],
+          [
+            655,
+            33
+          ],
+          [
+            655,
+            689
+          ],
+          [
+            556,
+            689
+          ]
+        ],
+        "ocr_tilt_deg": 0.0,
+        "entity_tilt_deg": 0.9710219502449036,
+        "association_score": 0.9714114832535885,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 70.0
+        },
+        "source": "ocr_edge_entity_v1"
+      },
+      {
+        "title": "墨菲定律",
+        "confidence": 0.9991885423660278,
+        "ocr_bbox": [
+          737,
+          97,
+          781,
+          305
+        ],
+        "entity_bbox": [
+          660,
+          25,
+          859,
+          706
+        ],
+        "raw_entity_bbox": [
+          657,
+          0,
+          861,
+          720
+        ],
+        "entity_quad": [
+          [
+            660,
+            25
+          ],
+          [
+            859,
+            25
+          ],
+          [
+            859,
+            706
+          ],
+          [
+            660,
+            706
+          ]
+        ],
+        "ocr_tilt_deg": -0.552231376575232,
+        "entity_tilt_deg": 0.0,
+        "association_score": 1.0,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        },
+        "source": "ocr_edge_entity_v1"
+      },
+      {
+        "title": "人性的弱点",
+        "confidence": 0.9816524386405945,
+        "ocr_bbox": [
+          864,
+          56,
+          906,
+          256
+        ],
+        "entity_bbox": [
+          870,
+          71,
+          1216,
+          683
+        ],
+        "raw_entity_bbox": [
+          868,
+          0,
+          1280,
+          720
+        ],
+        "entity_quad": [
+          [
+            870,
+            71
+          ],
+          [
+            1216,
+            71
+          ],
+          [
+            1216,
+            683
+          ],
+          [
+            870,
+            683
+          ]
+        ],
+        "ocr_tilt_deg": 0.0,
+        "entity_tilt_deg": -34.64094924926758,
+        "association_score": 0.8845386044591247,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        },
+        "source": "ocr_edge_entity_v1"
+      }
+    ],
+    "pick_candidates": [
+      {
+        "title": "羊皮卷",
+        "pick": [
+          260.0,
+          16.475290652633216,
+          115.0
+        ],
+        "confidence": 0.999041736125946,
+        "bbox": [
+          496,
+          105,
+          535,
+          225
+        ],
+        "tilt_deg": 0.0,
+        "tilt_direction": "near_vertical",
+        "suggested_place_tilt_deg": 0.0,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 33.0
+        }
+      },
+      {
+        "title": "人性的弱点",
+        "pick": [
+          260.0,
+          -48.53246604185138,
+          115.0
+        ],
+        "confidence": 0.9816524386405945,
+        "bbox": [
+          864,
+          56,
+          906,
+          256
+        ],
+        "tilt_deg": 0.0,
+        "tilt_direction": "near_vertical",
+        "suggested_place_tilt_deg": 0.0,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        }
+      },
+      {
+        "title": "鬼谷子",
+        "pick": [
+          260.0,
+          -5.4639219073051635,
+          115.0
+        ],
+        "confidence": 0.7360738962888718,
+        "bbox": [
+          621,
+          66,
+          659,
+          505
+        ],
+        "tilt_deg": 0.0,
+        "tilt_direction": "near_vertical",
+        "suggested_place_tilt_deg": 0.0,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 70.0
+        }
+      },
+      {
+        "title": "墨菲定律",
+        "pick": [
+          260.0,
+          -26.40806970423423,
+          115.0
+        ],
+        "confidence": 0.9991885423660278,
+        "bbox": [
+          737,
+          97,
+          781,
+          305
+        ],
+        "tilt_deg": -0.552231376575232,
+        "tilt_direction": "near_vertical",
+        "suggested_place_tilt_deg": -0.552231376575232,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        }
+      }
+    ],
+    "unknown_texts": [],
+    "book_count": 4,
+    "book_instances_overlay_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_000022/center_book_instances_overlay.png",
+    "bin_grid_geometry": {
+      "status": "complete",
+      "camera_depth_mm": 166.0,
+      "arm_depth_mm": 256.2,
+      "median_arm_depth_mm": 262.4,
+      "selected_span": {
+        "kind": "yellow_segment",
+        "x1_px": 593,
+        "x2_px": 621,
+        "width_px": 29,
+        "matched_width_mm": 5.0,
+        "camera_depth_mm": 166.0,
+        "arm_depth_mm": 256.2,
+        "confidence": 0.965
+      },
+      "depth_method": "visible_bin_grid_local_spans_with_camera_extrinsics",
+      "fx_scaled_px": 962.98,
+      "camera_x_offset_mm": 90.2,
+      "roi_px": [
+        486,
+        504,
+        819,
+        706
+      ],
+      "known_spans_mm": [
+        5.0,
+        10.0,
+        12.5,
+        15.0,
+        20.0,
+        22.5,
+        25.0,
+        32.5
+      ],
+      "camera_depth_plausible_range_mm": [
+        90.0,
+        260.0
+      ],
+      "arm_depth_plausible_range_mm": [
+        190.0,
+        340.0
+      ],
+      "edge_peaks_px": [
+        535,
+        607,
+        621,
+        696,
+        716,
+        775,
+        793
+      ],
+      "spans": [
+        {
+          "kind": "yellow_segment",
+          "x1_px": 537,
+          "x2_px": 590,
+          "width_px": 54,
+          "matched_width_mm": 10.0,
+          "camera_depth_mm": 178.3,
+          "arm_depth_mm": 268.5,
+          "confidence": 0.918
+        },
+        {
+          "kind": "yellow_segment",
+          "x1_px": 593,
+          "x2_px": 621,
+          "width_px": 29,
+          "matched_width_mm": 5.0,
+          "camera_depth_mm": 166.0,
+          "arm_depth_mm": 256.2,
+          "confidence": 0.965
+        },
+        {
+          "kind": "yellow_segment",
+          "x1_px": 657,
+          "x2_px": 709,
+          "width_px": 53,
+          "matched_width_mm": 10.0,
+          "camera_depth_mm": 181.7,
+          "arm_depth_mm": 271.9,
+          "confidence": 0.876
+        },
+        {
+          "kind": "yellow_segment",
+          "x1_px": 712,
+          "x2_px": 743,
+          "width_px": 32,
+          "matched_width_mm": 5.0,
+          "camera_depth_mm": 150.5,
+          "arm_depth_mm": 240.7,
+          "confidence": 0.771
+        }
+      ]
+    },
+    "bin_grid_overlay_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_000022/center_bin_grid_overlay.png"
+  },
+  "shelf": {
+    "source_view": "left",
+    "ok": true,
+    "sections": [
+      {
+        "bbox_px": [
+          555,
+          72,
+          110,
+          590
+        ],
+        "center_px": [
+          610.0,
+          367.0
+        ],
+        "width_mm": 81.0,
+        "camera_depth_mm": 709.1,
+        "depth_method": "known_section_width_pinhole",
+        "slice_count": 5,
+        "confidence": 0.75,
+        "slices": [
+          {
+            "index": 0,
+            "bbox_px": [
+              555,
+              72,
+              22,
+              590
+            ],
+            "center_px": [
+              566.0,
+              367.0
+            ],
+            "center_x_mm_local": 8.1,
+            "center_x_mm_centered": -32.4,
+            "width_mm": 16.2,
+            "status": "unknown",
+            "score": 38.84,
+            "support_score": 20.0,
+            "image_axis_score": 8.84,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 74.0,
+            "placement_hint": "lean_left",
+            "support_side": "left_wall",
+            "reason": "edge slice has left wall support; image-axis bonus 8.8"
+          },
+          {
+            "index": 1,
+            "bbox_px": [
+              577,
+              72,
+              22,
+              590
+            ],
+            "center_px": [
+              588.0,
+              367.0
+            ],
+            "center_x_mm_local": 24.3,
+            "center_x_mm_centered": -16.2,
+            "width_mm": 16.2,
+            "status": "unknown",
+            "score": 19.19,
+            "support_score": 0.0,
+            "image_axis_score": 9.19,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 52.0,
+            "placement_hint": "center",
+            "support_side": "none",
+            "reason": "interior slice; no wall/adjacent support bonus yet; image-axis bonus 9.2"
+          },
+          {
+            "index": 2,
+            "bbox_px": [
+              599,
+              72,
+              22,
+              590
+            ],
+            "center_px": [
+              610.0,
+              367.0
+            ],
+            "center_x_mm_local": 40.5,
+            "center_x_mm_centered": 0.0,
+            "width_mm": 16.2,
+            "status": "unknown",
+            "score": 19.53,
+            "support_score": 0.0,
+            "image_axis_score": 9.53,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 30.0,
+            "placement_hint": "center",
+            "support_side": "none",
+            "reason": "interior slice; no wall/adjacent support bonus yet; image-axis bonus 9.5"
+          },
+          {
+            "index": 3,
+            "bbox_px": [
+              621,
+              72,
+              22,
+              590
+            ],
+            "center_px": [
+              632.0,
+              367.0
+            ],
+            "center_x_mm_local": 56.7,
+            "center_x_mm_centered": 16.2,
+            "width_mm": 16.2,
+            "status": "unknown",
+            "score": 19.88,
+            "support_score": 0.0,
+            "image_axis_score": 9.88,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 8.0,
+            "placement_hint": "center",
+            "support_side": "none",
+            "reason": "interior slice; no wall/adjacent support bonus yet; image-axis bonus 9.9"
+          },
+          {
+            "index": 4,
+            "bbox_px": [
+              643,
+              72,
+              22,
+              590
+            ],
+            "center_px": [
+              654.0,
+              367.0
+            ],
+            "center_x_mm_local": 72.9,
+            "center_x_mm_centered": 32.4,
+            "width_mm": 16.2,
+            "status": "unknown",
+            "score": 39.78,
+            "support_score": 20.0,
+            "image_axis_score": 9.78,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 14.0,
+            "placement_hint": "lean_right",
+            "support_side": "right_wall",
+            "reason": "edge slice has right wall support; image-axis bonus 9.8"
+          }
+        ],
+        "id": "left"
+      },
+      {
+        "bbox_px": [
+          665,
+          72,
+          110,
+          590
+        ],
+        "center_px": [
+          720.0,
+          367.0
+        ],
+        "width_mm": 81.0,
+        "camera_depth_mm": 709.1,
+        "depth_method": "known_section_width_pinhole",
+        "slice_count": 5,
+        "confidence": 0.75,
+        "slices": [
+          {
+            "index": 0,
+            "bbox_px": [
+              665,
+              72,
+              22,
+              590
+            ],
+            "center_px": [
+              676.0,
+              367.0
+            ],
+            "center_x_mm_local": 8.1,
+            "center_x_mm_centered": -32.4,
+            "width_mm": 16.2,
+            "status": "unknown",
+            "score": 39.44,
+            "support_score": 20.0,
+            "image_axis_score": 9.44,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 36.0,
+            "placement_hint": "lean_left",
+            "support_side": "left_wall",
+            "reason": "edge slice has left wall support; image-axis bonus 9.4"
+          },
+          {
+            "index": 1,
+            "bbox_px": [
+              687,
+              72,
+              22,
+              590
+            ],
+            "center_px": [
+              698.0,
+              367.0
+            ],
+            "center_x_mm_local": 24.3,
+            "center_x_mm_centered": -16.2,
+            "width_mm": 16.2,
+            "status": "unknown",
+            "score": 19.09,
+            "support_score": 0.0,
+            "image_axis_score": 9.09,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 58.0,
+            "placement_hint": "center",
+            "support_side": "none",
+            "reason": "interior slice; no wall/adjacent support bonus yet; image-axis bonus 9.1"
+          },
+          {
+            "index": 2,
+            "bbox_px": [
+              709,
+              72,
+              22,
+              590
+            ],
+            "center_px": [
+              720.0,
+              367.0
+            ],
+            "center_x_mm_local": 40.5,
+            "center_x_mm_centered": 0.0,
+            "width_mm": 16.2,
+            "status": "unknown",
+            "score": 18.75,
+            "support_score": 0.0,
+            "image_axis_score": 8.75,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 80.0,
+            "placement_hint": "center",
+            "support_side": "none",
+            "reason": "interior slice; no wall/adjacent support bonus yet; image-axis bonus 8.8"
+          },
+          {
+            "index": 3,
+            "bbox_px": [
+              731,
+              72,
+              22,
+              590
+            ],
+            "center_px": [
+              742.0,
+              367.0
+            ],
+            "center_x_mm_local": 56.7,
+            "center_x_mm_centered": 16.2,
+            "width_mm": 16.2,
+            "status": "unknown",
+            "score": 18.41,
+            "support_score": 0.0,
+            "image_axis_score": 8.41,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 102.0,
+            "placement_hint": "center",
+            "support_side": "none",
+            "reason": "interior slice; no wall/adjacent support bonus yet; image-axis bonus 8.4"
+          },
+          {
+            "index": 4,
+            "bbox_px": [
+              753,
+              72,
+              22,
+              590
+            ],
+            "center_px": [
+              764.0,
+              367.0
+            ],
+            "center_x_mm_local": 72.9,
+            "center_x_mm_centered": 32.4,
+            "width_mm": 16.2,
+            "status": "unknown",
+            "score": 38.06,
+            "support_score": 20.0,
+            "image_axis_score": 8.06,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 124.0,
+            "placement_hint": "lean_right",
+            "support_side": "right_wall",
+            "reason": "edge slice has right wall support; image-axis bonus 8.1"
+          }
+        ],
+        "id": "right"
+      }
+    ],
+    "ranked_candidates": [
+      {
+        "section_id": "left",
+        "slice_index": 4,
+        "center_px": [
+          654.0,
+          367.0
+        ],
+        "center_x_mm_local": 72.9,
+        "center_x_mm_centered": 32.4,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 39.78,
+        "support_score": 20.0,
+        "image_axis_score": 9.78,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 14.0,
+        "placement_hint": "lean_right",
+        "support_side": "right_wall",
+        "status": "unknown",
+        "reason": "edge slice has right wall support; image-axis bonus 9.8"
+      },
+      {
+        "section_id": "right",
+        "slice_index": 0,
+        "center_px": [
+          676.0,
+          367.0
+        ],
+        "center_x_mm_local": 8.1,
+        "center_x_mm_centered": -32.4,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 39.44,
+        "support_score": 20.0,
+        "image_axis_score": 9.44,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 36.0,
+        "placement_hint": "lean_left",
+        "support_side": "left_wall",
+        "status": "unknown",
+        "reason": "edge slice has left wall support; image-axis bonus 9.4"
+      },
+      {
+        "section_id": "left",
+        "slice_index": 0,
+        "center_px": [
+          566.0,
+          367.0
+        ],
+        "center_x_mm_local": 8.1,
+        "center_x_mm_centered": -32.4,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 38.84,
+        "support_score": 20.0,
+        "image_axis_score": 8.84,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 74.0,
+        "placement_hint": "lean_left",
+        "support_side": "left_wall",
+        "status": "unknown",
+        "reason": "edge slice has left wall support; image-axis bonus 8.8"
+      },
+      {
+        "section_id": "right",
+        "slice_index": 4,
+        "center_px": [
+          764.0,
+          367.0
+        ],
+        "center_x_mm_local": 72.9,
+        "center_x_mm_centered": 32.4,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 38.06,
+        "support_score": 20.0,
+        "image_axis_score": 8.06,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 124.0,
+        "placement_hint": "lean_right",
+        "support_side": "right_wall",
+        "status": "unknown",
+        "reason": "edge slice has right wall support; image-axis bonus 8.1"
+      },
+      {
+        "section_id": "left",
+        "slice_index": 3,
+        "center_px": [
+          632.0,
+          367.0
+        ],
+        "center_x_mm_local": 56.7,
+        "center_x_mm_centered": 16.2,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 19.88,
+        "support_score": 0.0,
+        "image_axis_score": 9.88,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 8.0,
+        "placement_hint": "center",
+        "support_side": "none",
+        "status": "unknown",
+        "reason": "interior slice; no wall/adjacent support bonus yet; image-axis bonus 9.9"
+      },
+      {
+        "section_id": "left",
+        "slice_index": 2,
+        "center_px": [
+          610.0,
+          367.0
+        ],
+        "center_x_mm_local": 40.5,
+        "center_x_mm_centered": 0.0,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 19.53,
+        "support_score": 0.0,
+        "image_axis_score": 9.53,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 30.0,
+        "placement_hint": "center",
+        "support_side": "none",
+        "status": "unknown",
+        "reason": "interior slice; no wall/adjacent support bonus yet; image-axis bonus 9.5"
+      },
+      {
+        "section_id": "left",
+        "slice_index": 1,
+        "center_px": [
+          588.0,
+          367.0
+        ],
+        "center_x_mm_local": 24.3,
+        "center_x_mm_centered": -16.2,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 19.19,
+        "support_score": 0.0,
+        "image_axis_score": 9.19,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 52.0,
+        "placement_hint": "center",
+        "support_side": "none",
+        "status": "unknown",
+        "reason": "interior slice; no wall/adjacent support bonus yet; image-axis bonus 9.2"
+      },
+      {
+        "section_id": "right",
+        "slice_index": 1,
+        "center_px": [
+          698.0,
+          367.0
+        ],
+        "center_x_mm_local": 24.3,
+        "center_x_mm_centered": -16.2,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 19.09,
+        "support_score": 0.0,
+        "image_axis_score": 9.09,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 58.0,
+        "placement_hint": "center",
+        "support_side": "none",
+        "status": "unknown",
+        "reason": "interior slice; no wall/adjacent support bonus yet; image-axis bonus 9.1"
+      },
+      {
+        "section_id": "right",
+        "slice_index": 2,
+        "center_px": [
+          720.0,
+          367.0
+        ],
+        "center_x_mm_local": 40.5,
+        "center_x_mm_centered": 0.0,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 18.75,
+        "support_score": 0.0,
+        "image_axis_score": 8.75,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 80.0,
+        "placement_hint": "center",
+        "support_side": "none",
+        "status": "unknown",
+        "reason": "interior slice; no wall/adjacent support bonus yet; image-axis bonus 8.8"
+      },
+      {
+        "section_id": "right",
+        "slice_index": 3,
+        "center_px": [
+          742.0,
+          367.0
+        ],
+        "center_x_mm_local": 56.7,
+        "center_x_mm_centered": 16.2,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 18.41,
+        "support_score": 0.0,
+        "image_axis_score": 8.41,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 102.0,
+        "placement_hint": "center",
+        "support_side": "none",
+        "status": "unknown",
+        "reason": "interior slice; no wall/adjacent support bonus yet; image-axis bonus 8.4"
+      }
+    ],
+    "status": "complete",
+    "section_width_mm": 81.0,
+    "camera_depth_mm": 709.1,
+    "depth_method": "known_section_width_pinhole",
+    "depth_note": "Camera-relative depth only; no camera-to-arm extrinsics applied.",
+    "slice_count": 5,
+    "fixed_z_mm": 140.0,
+    "overlay_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_000022/left_shelf_overlay.png"
+  },
+  "home": {
+    "label": "home_straight",
+    "command": "{#000P1500T1500!#001P2000T1500!#002P2000T1500!#003P0850T1500!#004P1500T1500!#005P1500T1500!}",
+    "ok": true,
+    "dry_run": false,
+    "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_000022/home_straight_command.txt"
+  },
+  "errors": [],
+  "planned_tasks": [
+    {
+      "title": "羊皮卷",
+      "target_zone": "A_right",
+      "thickness_mm": 7.0,
+      "confidence": 0.999041736125946,
+      "pick_point": {
+        "x": -16.488398512949384,
+        "y": 260.0,
+        "z": 115.0,
+        "source": "fixed_bin_pick_v1"
+      }
+    },
+    {
+      "title": "鬼谷子",
+      "target_zone": "C_left",
+      "thickness_mm": 24.0,
+      "confidence": 0.7360738962888718,
+      "pick_point": {
+        "x": 5.464393860724004,
+        "y": 260.0,
+        "z": 115.0,
+        "source": "fixed_bin_pick_v1"
+      }
+    },
+    {
+      "title": "墨菲定律",
+      "target_zone": "C_right",
+      "thickness_mm": 18.0,
+      "confidence": 0.9991885423660278,
+      "pick_point": {
+        "x": 26.447384161664836,
+        "y": 260.0,
+        "z": 115.0,
+        "source": "fixed_bin_pick_v1"
+      }
+    },
+    {
+      "title": "人性的弱点",
+      "target_zone": "B_right",
+      "thickness_mm": 28.0,
+      "confidence": 0.9816524386405945,
+      "pick_point": {
+        "x": 48.66466800971983,
+        "y": 260.0,
+        "z": 115.0,
+        "source": "fixed_bin_pick_v1"
+      }
+    }
+  ],
+  "unknown_titles": [],
+  "task_queue": [
+    {
+      "index": 1,
+      "title": "羊皮卷",
+      "confidence": 0.999041736125946,
+      "pick": [
+        260.0,
+        16.475290652633216,
+        115.0
+      ],
+      "pick_source": "center_view_lateral_pose_provider",
+      "entity_bbox": [
+        324,
+        35,
+        548,
+        693
+      ],
+      "raw_entity_bbox": [
+        289,
+        0,
+        563,
+        720
+      ],
+      "ocr_bbox": [
+        496,
+        105,
+        535,
+        225
+      ],
+      "tilt_deg": 0.0,
+      "book_dimensions_mm": {
+        "size_profile": "compact_200x140x8",
+        "spine_height": 200.0,
+        "cover_width": 140.0,
+        "thickness": 8.0,
+        "ocr_visible_height_mm": 33.0
+      },
+      "shelf_candidate": {
+        "section_id": "left",
+        "slice_index": 4,
+        "center_px": [
+          654.0,
+          367.0
+        ],
+        "center_x_mm_local": 72.9,
+        "center_x_mm_centered": 32.4,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 39.78,
+        "support_score": 20.0,
+        "image_axis_score": 9.78,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 14.0,
+        "placement_hint": "lean_right",
+        "support_side": "right_wall",
+        "status": "unknown",
+        "reason": "edge slice has right wall support; image-axis bonus 9.8"
+      },
+      "place_status": "candidate_from_left_shelf_scan",
+      "execution_status": "planned_only_not_sent"
+    },
+    {
+      "index": 2,
+      "title": "人性的弱点",
+      "confidence": 0.9816524386405945,
+      "pick": [
+        260.0,
+        -48.53246604185138,
+        115.0
+      ],
+      "pick_source": "center_view_lateral_pose_provider",
+      "entity_bbox": [
+        870,
+        71,
+        1216,
+        683
+      ],
+      "raw_entity_bbox": [
+        868,
+        0,
+        1280,
+        720
+      ],
+      "ocr_bbox": [
+        864,
+        56,
+        906,
+        256
+      ],
+      "tilt_deg": 0.0,
+      "book_dimensions_mm": {
+        "size_profile": "compact_200x140x8",
+        "spine_height": 200.0,
+        "cover_width": 140.0,
+        "thickness": 8.0,
+        "ocr_visible_height_mm": 95.0
+      },
+      "shelf_candidate": {
+        "section_id": "right",
+        "slice_index": 0,
+        "center_px": [
+          676.0,
+          367.0
+        ],
+        "center_x_mm_local": 8.1,
+        "center_x_mm_centered": -32.4,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 39.44,
+        "support_score": 20.0,
+        "image_axis_score": 9.44,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 36.0,
+        "placement_hint": "lean_left",
+        "support_side": "left_wall",
+        "status": "unknown",
+        "reason": "edge slice has left wall support; image-axis bonus 9.4"
+      },
+      "place_status": "candidate_from_left_shelf_scan",
+      "execution_status": "planned_only_not_sent"
+    },
+    {
+      "index": 3,
+      "title": "鬼谷子",
+      "confidence": 0.7360738962888718,
+      "pick": [
+        260.0,
+        -5.4639219073051635,
+        115.0
+      ],
+      "pick_source": "center_view_lateral_pose_provider",
+      "entity_bbox": [
+        556,
+        33,
+        655,
+        689
+      ],
+      "raw_entity_bbox": [
+        551,
+        0,
+        659,
+        720
+      ],
+      "ocr_bbox": [
+        621,
+        66,
+        659,
+        505
+      ],
+      "tilt_deg": 0.0,
+      "book_dimensions_mm": {
+        "size_profile": "compact_200x140x8",
+        "spine_height": 200.0,
+        "cover_width": 140.0,
+        "thickness": 8.0,
+        "ocr_visible_height_mm": 70.0
+      },
+      "shelf_candidate": {
+        "section_id": "left",
+        "slice_index": 0,
+        "center_px": [
+          566.0,
+          367.0
+        ],
+        "center_x_mm_local": 8.1,
+        "center_x_mm_centered": -32.4,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 38.84,
+        "support_score": 20.0,
+        "image_axis_score": 8.84,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 74.0,
+        "placement_hint": "lean_left",
+        "support_side": "left_wall",
+        "status": "unknown",
+        "reason": "edge slice has left wall support; image-axis bonus 8.8"
+      },
+      "place_status": "candidate_from_left_shelf_scan",
+      "execution_status": "planned_only_not_sent"
+    },
+    {
+      "index": 4,
+      "title": "墨菲定律",
+      "confidence": 0.9991885423660278,
+      "pick": [
+        260.0,
+        -26.40806970423423,
+        115.0
+      ],
+      "pick_source": "center_view_lateral_pose_provider",
+      "entity_bbox": [
+        660,
+        25,
+        859,
+        706
+      ],
+      "raw_entity_bbox": [
+        657,
+        0,
+        861,
+        720
+      ],
+      "ocr_bbox": [
+        737,
+        97,
+        781,
+        305
+      ],
+      "tilt_deg": -0.552231376575232,
+      "book_dimensions_mm": {
+        "size_profile": "compact_200x140x8",
+        "spine_height": 200.0,
+        "cover_width": 140.0,
+        "thickness": 8.0,
+        "ocr_visible_height_mm": 95.0
+      },
+      "shelf_candidate": {
+        "section_id": "right",
+        "slice_index": 4,
+        "center_px": [
+          764.0,
+          367.0
+        ],
+        "center_x_mm_local": 72.9,
+        "center_x_mm_centered": 32.4,
+        "camera_depth_mm": 709.1,
+        "fixed_z_mm": 140.0,
+        "score": 38.06,
+        "support_score": 20.0,
+        "image_axis_score": 8.06,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 124.0,
+        "placement_hint": "lean_right",
+        "support_side": "right_wall",
+        "status": "unknown",
+        "reason": "edge slice has right wall support; image-axis bonus 8.1"
+      },
+      "place_status": "candidate_from_left_shelf_scan",
+      "execution_status": "planned_only_not_sent"
+    }
+  ],
+  "user_report_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260514_000022/startup_scan_report.md"
+}

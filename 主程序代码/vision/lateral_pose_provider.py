@@ -155,9 +155,9 @@ def get_book_pick_pose(
     return pose
 
 
-def _hit_to_arm_y_mm(hit: "SpineHit") -> float:
+def _hit_to_arm_y_mm(hit: "SpineHit", depth_mm: float | None = None) -> float:
     u_pixel, v_pixel = _bbox_center(hit)
-    depth_mm = float(config.BIN_FIXED_DEPTH_MM)
+    depth_mm = float(config.BIN_FIXED_DEPTH_MM if depth_mm is None else depth_mm)
     cam_y_offset_mm = float(config.CAMERA_Y_OFFSET_MM)
     sign = int(config.CAMERA_PIXEL_TO_ARM_Y_SIGN)
     cam_frame_y_mm = _pixel_to_camera_frame_y_mm(u_pixel, v_pixel, depth_mm)
@@ -169,6 +169,66 @@ def _hit_to_arm_y_mm(hit: "SpineHit") -> float:
         f"offset={cam_y_offset_mm:+.1f}mm → arm_y={arm_y_mm:+.1f}mm"
     )
     return arm_y_mm
+
+
+def _estimate_current_bin_depth(frame: np.ndarray) -> Dict[str, object]:
+    """Estimate current bin/book depth from the visible bin grid.
+
+    The config depth is now only a fallback. Real runs may move the bin closer
+    or farther, so detected-books loop should plan from this frame's geometry.
+    """
+    try:
+        from .bin_slot_scanner import estimate_bin_grid_geometry
+
+        grid = estimate_bin_grid_geometry(frame)
+    except Exception as exc:  # noqa: BLE001 - fallback keeps the demo path alive.
+        print(f"[LATERAL] bin depth estimate failed; using config fallback: {exc}")
+        grid = {"status": "depth_estimate_error", "error": str(exc)}
+
+    arm_x = grid.get("arm_depth_mm")
+    camera_depth = grid.get("camera_depth_mm")
+    if arm_x is None or camera_depth is None:
+        arm_x = float(config.BIN_PICK_DEPTH_MM)
+        camera_depth = float(config.BIN_FIXED_DEPTH_MM)
+        source = "config_fallback"
+    else:
+        arm_x = float(arm_x)
+        raw_arm_x = arm_x
+        correction = float(getattr(config, "BIN_DEPTH_CORRECTION_MM", 0.0))
+        arm_x = raw_arm_x + correction
+        camera_depth = arm_x - float(config.CAMERA_POSITION_IN_ARM_MM[0])
+        source = "visible_bin_grid"
+
+    print(
+        f"[LATERAL] current bin depth: arm_x={arm_x:.1f}mm "
+        f"camera_depth={camera_depth:.1f}mm source={source}"
+    )
+    return {
+        "arm_x_mm": arm_x,
+        "camera_depth_mm": camera_depth,
+        "source": source,
+        "bin_grid_geometry": grid,
+    }
+
+
+def _tilt_direction(tilt_deg: float) -> str:
+    if tilt_deg > 2.0:
+        return "top_to_right"
+    if tilt_deg < -2.0:
+        return "top_to_left"
+    return "near_vertical"
+
+
+def _hit_metadata(hit: "SpineHit") -> Dict[str, object]:
+    dimensions = config.get_book_dimensions_mm(hit.matched_title)
+    tilt_deg = float(hit.tilt_deg)
+    suggested_tilt = max(-10.0, min(10.0, tilt_deg))
+    return {
+        "tilt_deg": tilt_deg,
+        "tilt_direction": _tilt_direction(tilt_deg),
+        "suggested_place_tilt_deg": suggested_tilt,
+        "book_dimensions_mm": dimensions,
+    }
 
 
 def get_all_book_pick_poses_from_frame(frame: np.ndarray) -> List[Dict[str, object]]:
@@ -199,11 +259,14 @@ def get_all_book_pick_poses_from_frame(frame: np.ndarray) -> List[Dict[str, obje
         ),
     )
 
+    depth = _estimate_current_bin_depth(frame)
+    arm_x = float(depth["arm_x_mm"])
+    camera_depth = float(depth["camera_depth_mm"])
     candidates: List[Dict[str, object]] = []
     for hit in ordered_hits:
-        arm_y = _hit_to_arm_y_mm(hit)
+        arm_y = _hit_to_arm_y_mm(hit, depth_mm=camera_depth)
         pose = (
-            float(config.BIN_PICK_DEPTH_MM),
+            arm_x,
             float(arm_y),
             float(config.BIN_PICK_GRASP_HEIGHT_MM),
         )
@@ -217,9 +280,98 @@ def get_all_book_pick_poses_from_frame(frame: np.ndarray) -> List[Dict[str, obje
                 "pick": pose,
                 "confidence": float(hit.ocr_score),
                 "bbox": hit.bbox,
+                "pick_depth_source": depth["source"],
+                "bin_grid_geometry": depth.get("bin_grid_geometry"),
+                **_hit_metadata(hit),
             }
         )
     return candidates
+
+
+def _hits_to_pick_candidates(
+    hits: List["SpineHit"],
+    *,
+    arm_x_mm: float | None = None,
+    camera_depth_mm: float | None = None,
+    pick_depth_source: str = "config_fallback",
+    bin_grid_geometry: dict | None = None,
+) -> List[Dict[str, object]]:
+    title_order = {title: index for index, title in enumerate(config.KNOWN_BOOK_TITLES)}
+    ordered_hits = sorted(
+        hits,
+        key=lambda hit: (
+            title_order.get(hit.matched_title, len(title_order)),
+            _bbox_center(hit)[0],
+            -hit.ocr_score,
+        ),
+    )
+
+    candidates: List[Dict[str, object]] = []
+    arm_x = float(config.BIN_PICK_DEPTH_MM if arm_x_mm is None else arm_x_mm)
+    camera_depth = float(config.BIN_FIXED_DEPTH_MM if camera_depth_mm is None else camera_depth_mm)
+    for hit in ordered_hits:
+        arm_y = _hit_to_arm_y_mm(hit, depth_mm=camera_depth)
+        pose = (
+            arm_x,
+            float(arm_y),
+            float(config.BIN_PICK_GRASP_HEIGHT_MM),
+        )
+        print(
+            f"[LATERAL] loop candidate: {hit.matched_title!r} "
+            f"pick=({pose[0]:+.1f}, {pose[1]:+.1f}, {pose[2]:+.1f}) mm"
+        )
+        candidates.append(
+            {
+                "title": hit.matched_title,
+                "pick": pose,
+                "confidence": float(hit.ocr_score),
+                "bbox": hit.bbox,
+                "pick_depth_source": pick_depth_source,
+                "bin_grid_geometry": bin_grid_geometry,
+                **_hit_metadata(hit),
+            }
+        )
+    return candidates
+
+
+def scan_book_pick_poses_with_unknowns_from_frame(
+    frame: np.ndarray,
+) -> Dict[str, object]:
+    """Detect known book picks and report OCR text not matched to the catalog."""
+    from .spine_detector import SpineDetector
+
+    if frame is None or frame.size == 0:
+        print("[LATERAL] 空帧")
+        return {"candidates": [], "unknown_texts": []}
+
+    hits, unknown_texts = SpineDetector.instance().detect_with_unknown_texts(frame)
+    if not hits:
+        print("[LATERAL] 本帧没有命中任何 KNOWN_BOOK_TITLES")
+    depth = _estimate_current_bin_depth(frame)
+    return {
+        "candidates": _hits_to_pick_candidates(
+            hits,
+            arm_x_mm=float(depth["arm_x_mm"]),
+            camera_depth_mm=float(depth["camera_depth_mm"]),
+            pick_depth_source=str(depth["source"]),
+            bin_grid_geometry=depth.get("bin_grid_geometry"),
+        ),
+        "unknown_texts": unknown_texts,
+        "bin_grid_geometry": depth.get("bin_grid_geometry"),
+        "pick_depth_source": depth["source"],
+    }
+
+
+def scan_book_pick_poses_with_unknowns_from_camera() -> Dict[str, object]:
+    """Realtime Auto entry: one frame -> known candidates + unknown OCR text."""
+    from .camera import CameraError, RGBCamera
+
+    try:
+        frame = RGBCamera.instance().read_frame()
+    except CameraError as exc:
+        print(f"[LATERAL] 相机不可用: {exc}")
+        return {"candidates": [], "unknown_texts": [], "camera_error": str(exc)}
+    return scan_book_pick_poses_with_unknowns_from_frame(frame)
 
 
 def get_all_book_pick_poses_from_camera() -> List[Dict[str, object]]:

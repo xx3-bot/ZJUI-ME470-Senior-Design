@@ -34,8 +34,8 @@ RGB_INTRINSICS_CY_PX: float = 358.15
 # 相机相对机械臂底座的位置（arm frame, mm）。
 # 坐标约定（2026-05-11 物理验证）：
 #   +X = 机械臂前方（朝 bin）   +Z = 上    +Y = 横向
-# 用户实测：相机装在机械臂上方，前移 80mm，居中（Y=0），高 100mm。
-CAMERA_POSITION_IN_ARM_MM: Tuple[float, float, float] = (80.0, 0.0, 100.0)
+# 用户实测：相机装在机械臂上方，前移 90.2mm，居中（Y=0），高 102.0mm。
+CAMERA_POSITION_IN_ARM_MM: Tuple[float, float, float] = (90.2, 0.0, 102.0)
 
 # 相机镜头中心相对 arm 中轴的横向偏移（mm）。理想 = 0（居中）。
 CAMERA_Y_OFFSET_MM: float = CAMERA_POSITION_IN_ARM_MM[1]
@@ -49,14 +49,28 @@ CAMERA_PIXEL_TO_ARM_Y_SIGN: int = -1  # 2026-05-11 实测确认（机械同学 +
 #   arm X = BIN_PICK_DEPTH_MM       （机械臂前方深度）
 #   arm Z = BIN_PICK_GRASP_HEIGHT_MM（抓握点高度）
 #   arm Y = 视觉算（lateral_pose_provider.get_book_arm_y_mm）
-BIN_PICK_DEPTH_MM: float = 250.0           # 用户实测：书在 arm-X 250mm 处
+BIN_PICK_DEPTH_MM: float = 320.0           # 用户实测：真实书脊/抓握平面在 arm-X 约 320mm 处
 BIN_PICK_GRASP_HEIGHT_MM: float = 115.0    # 抓握高度
+BIN_DEPTH_CORRECTION_MM: float = -10.0     # 当前视觉格子估深比人工抓书点约大 10mm；校正到约 305mm
+
+# 当前 Auto-demo 的 shelf 初始化模型（A 路线）：
+# 启动扫描只负责把可见 shelf 切成稳定 slice；后续执行 loop 用 world model
+# 记录占用，不在每次放书后重新用视觉推翻坐标。Y/Z 仍是当前实机安全默认值。
+DEMO_SHELF_PLACE_Y_MM: float = 250.0
+DEMO_SHELF_PLACE_Z_MM: float = 140.0
+DEMO_SHELF_SECTION_WIDTH_MM: float = 81.0
+DEMO_SHELF_SECTION_GAP_MM: float = 0.0
+DEMO_SHELF_ALLOWED_SECTION_WIDTH_RATIO: float = 1.25
+# Edge slices still score highly because they provide wall support, but the
+# actual place point must stay inside the shelf so the book center does not land
+# just outside the physical side wall.
+DEMO_SHELF_EDGE_PLACE_INSET_MM: float = 12.0
 
 # v1 bin scan: 相机到书的 camera-frame 深度（派生）。
 # 公式：book 的 arm X − 相机的 arm X
 # 跟着 BIN_PICK_DEPTH_MM 和 CAMERA_POSITION_IN_ARM_MM 自动更新，
 # 不要单独硬编码这一项。
-BIN_FIXED_DEPTH_MM: float = BIN_PICK_DEPTH_MM - CAMERA_POSITION_IN_ARM_MM[0]  # 250 − 80 = 170
+BIN_FIXED_DEPTH_MM: float = BIN_PICK_DEPTH_MM - CAMERA_POSITION_IN_ARM_MM[0]  # 320 − 90.2 = 229.8
 
 # 相机外参（占位值，装机后实测替换）
 CAMERA_TRANSLATION_MM: Tuple[float, float, float] = (0.0, -400.0, 200.0)
@@ -72,50 +86,84 @@ KNOWN_BOOK_TITLES: List[str] = [
     "鬼谷子",
     "墨菲定律",
 ]
+
+# 当前 demo 书本只有两类物理规格。把规格先集中成 profile，
+# 后续如果每本书要精确标定，只需要改 KNOWN_BOOK_DIMENSIONS_MM 的 size_profile。
+BOOK_SIZE_PROFILES_MM: Dict[str, Dict[str, float]] = {
+    "compact_200x140x8": {
+        "spine_height": 200.0,
+        "cover_width": 140.0,
+        "thickness": 8.0,
+    },
+    "tall_209x140x9": {
+        "spine_height": 209.0,
+        "cover_width": 140.0,
+        "thickness": 9.0,
+    },
+}
+DEFAULT_BOOK_SIZE_PROFILE: str = "tall_209x140x9"
+
 KNOWN_BOOK_DIMENSIONS_MM: Dict[str, Dict[str, float]] = {
     "习近平新时代中国特色社会主义思想概论": {
-        "spine_height":          227.0,
-        "cover_width":           150.0,
-        "thickness":              25.0,
+        "size_profile": "tall_209x140x9",
+        "spine_height":          209.0,
+        "cover_width":           140.0,
+        "thickness":               9.0,
         "ocr_visible_height_mm": 110.0,
     },
     "羊皮卷": {
-        "spine_height":          210.0,
-        "cover_width":           150.0,
-        "thickness":               7.0,
+        "size_profile": "compact_200x140x8",
+        "spine_height":          200.0,
+        "cover_width":           140.0,
+        "thickness":               8.0,
         "ocr_visible_height_mm":  33.0,
     },
     "聊斋志异": {
-        "spine_height":          210.0,
-        "cover_width":           150.0,
-        "thickness":              20.0,
+        "size_profile": "compact_200x140x8",
+        "spine_height":          200.0,
+        "cover_width":           140.0,
+        "thickness":               8.0,
         "ocr_visible_height_mm":  80.0,
     },
     "毛泽东思想概况": {
-        "spine_height":          227.0,
-        "cover_width":           150.0,
-        "thickness":              25.0,
+        "size_profile": "tall_209x140x9",
+        "spine_height":          209.0,
+        "cover_width":           140.0,
+        "thickness":               9.0,
         "ocr_visible_height_mm": 110.0,
     },
     "人性的弱点": {
-        "spine_height":          210.0,
-        "cover_width":           150.0,
-        "thickness":              28.0,
+        "size_profile": "compact_200x140x8",
+        "spine_height":          200.0,
+        "cover_width":           140.0,
+        "thickness":               8.0,
         "ocr_visible_height_mm":  95.0,
     },
     "鬼谷子": {
-        "spine_height":          210.0,
-        "cover_width":           150.0,
-        "thickness":              24.0,
+        "size_profile": "compact_200x140x8",
+        "spine_height":          200.0,
+        "cover_width":           140.0,
+        "thickness":               8.0,
         "ocr_visible_height_mm":  70.0,
     },
     "墨菲定律": {
-        "spine_height":          210.0,
-        "cover_width":           150.0,
-        "thickness":              18.0,
+        "size_profile": "compact_200x140x8",
+        "spine_height":          200.0,
+        "cover_width":           140.0,
+        "thickness":               8.0,
         "ocr_visible_height_mm":  95.0,
     },
 }
+
+
+def get_book_dimensions_mm(title: str) -> Dict[str, float | str]:
+    """Return the merged physical dimension record for a known book title."""
+    raw = dict(KNOWN_BOOK_DIMENSIONS_MM.get(title, {}))
+    profile_name = str(raw.get("size_profile", DEFAULT_BOOK_SIZE_PROFILE))
+    profile = dict(BOOK_SIZE_PROFILES_MM.get(profile_name, BOOK_SIZE_PROFILES_MM[DEFAULT_BOOK_SIZE_PROFILE]))
+    merged: Dict[str, float | str] = {"size_profile": profile_name, **profile}
+    merged.update(raw)
+    return merged
 # 全局 fallback：仅给没填 ocr_visible_height_mm 的书用
 OCR_TO_REAL_HEIGHT_RATIO: float = 0.485
 

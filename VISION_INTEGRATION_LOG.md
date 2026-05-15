@@ -1,20 +1,142 @@
 # Vision Integration Log
 
-Last updated: 2026-05-06 (AprilTag 一键启动校准框架)
+Last updated: 2026-05-15 (bin ranging + startup-scan reuse + shelf false-positive correction)
 
 本文档记录视觉模块（OCR-first 书脊检测 pipeline）与机械运动模块的集成工作：
 做了什么、实现了哪些能力、怎么使用、怎么验证。
 
 ---
 
+## 0. Current 2026-05-15 status
+
+Current vision integration progress:
+
+- Bin detection now combines OCR/title matching, book/entity boxes, denoised
+  edge preprocessing, and visible bin-grid geometry.
+- `startup_scan.py` stores the authoritative per-run pick candidates in
+  `bin.pick_candidates`.
+- `detected_books_loop.py` now reuses those startup-scan pick candidates during
+  `--auto-demo`. This avoids the earlier bug where Auto scanned the bin once,
+  moved the arm, then opened the camera again and got a different pick X.
+- Recent real tests show this matters: a clean startup snapshot gave picks near
+  `X ~= 309.5 mm` and all three target sequences prechecked successfully, while
+  a later farther setup produced `X ~= 320.9 mm` and MuJoCo IK rejected all
+  three picks. The next software guard should explicitly report "book/bin too
+  far" before attempting motion if pick X exceeds the reliable workspace.
+- Processed overlays are generated for bin/entity detection, bin grid/depth, and
+  shelf slice candidates.
+- Shared static and runtime visual test data now lives in `测试文件/`.
+
+Critical shelf correction from 2026-05-15:
+
+- The current shelf scanner can still produce false positives. In
+  `测试文件/runtime_artifacts/startup_scan/20260515_180953`, the frame is visibly
+  a bin/books view, but the shelf detector accepted the yellow bin bottom as two
+  shelf sections and produced fake shelf slots.
+- Treat current shelf slot output as provisional. It is useful for software
+  integration, but it is not robust enough for autonomous placement unless the
+  frame is visually confirmed to contain the actual shelf.
+- The next shelf-vision implementation should add a CAD/pose-validation gate:
+  use the known 81x162 / 81x81 book-stand geometry, edges/perforation pattern,
+  and reprojection or `solvePnP` checks to reject bin views and partial false
+  positives.
+- Do not depend on full shelf CAD visibility after books are placed. The
+  intended design is: valid startup pose initializes shelf coordinates; later
+  frames update local occupancy/book-spine support around the known shelf pose.
+
+## 0.1 Previous 2026-05-14 status
+
+2026-05-14 correction from real hardware/camera setup:
+- The real book-spine grasp plane is now treated as `arm X ~= 320 mm`, so
+  `config.BIN_PICK_DEPTH_MM = 320.0`.
+- With the camera mounted at `CAMERA_POSITION_IN_ARM_MM = (90.2, 0, 102.0)`,
+  the fixed camera-to-book projection depth is now
+  `config.BIN_FIXED_DEPTH_MM = 229.8`.
+- Startup-scan reports must use `bin.pick_candidates[*].pick` as the
+  user-facing/control pick pose. The older `bin.books[*].pick_point` payload is
+  compatibility data only and should not be treated as the execution pose.
+- The 2026-05-14 center-bin overlay visually confirmed why this matters: after
+  the X update, the visible bin-grid estimate moved from the old misleading
+  `arm X ~= 256 mm` to about `arm X ~= 317 mm`, consistent with the measured
+  real grasp depth.
+- Shelf-view yaw note: startup scan uses physical command `servo000 P2167` for
+  the shelf view. This is the correct direction on the real arm and is nominally
+  `+90 deg` from center by the current PWM scale, although the user observed it
+  may overshoot by roughly 1-2 degrees. Keep the command unchanged for now and
+  model the small difference as a future yaw correction.
+- Since the camera is rigidly mounted to the rotating base/pan assembly, the
+  shelf-view extrinsic can be derived from the initial camera offset
+  `(90.2, 0, 102.0)` and the shelf-scan yaw. The shelf pipeline can therefore
+  start converting `shelf_scanner` slice pixels/depth into arm-frame placement
+  poses.
+- Shelf slice scoring correction: shelf candidates now include an occupancy
+  estimate from visible-yellow coverage. A slice already occluded by a placed
+  book is marked `occupied` and receives a large penalty, so wall support alone
+  no longer makes an occupied edge slice rank highly. Adjacent occupied slices
+  can give a smaller `left_book/right_book` support bonus to nearby free slices.
+
+The current practical vision-to-motion path is no longer the old
+`world_pose_provider` depth-from-book-height experiment. The stable path for
+bin picking is:
+
+```text
+vision.lateral_pose_provider
+-> get_all_book_pick_poses_from_camera()
+-> main.py --auto-demo / --run-detected-books-loop
+-> target_sequence.generate_target_sequence()
+```
+
+Current assumptions:
+- The bin depth is fixed for this stage.
+- Arm-frame pick X is hardcoded as `config.BIN_PICK_DEPTH_MM = 320.0`.
+- Arm-frame pick Z is hardcoded as `config.BIN_PICK_GRASP_HEIGHT_MM = 115.0`.
+- Vision only estimates arm-frame lateral `Y`.
+- The camera-to-book fixed depth used by the pinhole projection is
+  `config.BIN_FIXED_DEPTH_MM = 229.8`, derived from
+  `BIN_PICK_DEPTH_MM - CAMERA_POSITION_IN_ARM_MM[0]`.
+- Lens distortion is corrected through `cv2.undistortPoints()` using
+  `vision/intrinsics_calibration.json`.
+
+Current known-book list:
+- `羊皮卷`
+- `习近平新时代中国特色社会主义思想概论`
+- `聊斋志异`
+- `毛泽东思想概况`
+- `人性的弱点`
+- `鬼谷子`
+- `墨菲定律`
+
+Confirmed integration output:
+- `main.py --auto-demo` and `main.py --run-detected-books-loop` can detect
+  multiple visible known books, order them by `config.KNOWN_BOOK_TITLES`, and
+  generate a merged hardware command file.
+- OCR text that does not match the known-book list is reported as an
+  operator/manual-intervention item. It is not converted into a pick pose.
+- Camera selection can be overridden by `--camera-index`; on this Mac, the
+  iPhone Continuity camera may appear as OpenCV index `1`, while `auto` remains
+  the safer fallback.
+- A confirmed 2026-05-11 run exists under
+  `sim_output/detected_books_loop/20260511_215629/`, with three detected books:
+  `羊皮卷`, `鬼谷子`, and `墨菲定律`.
+
+Important compatibility note:
+- `vision.bin_scanner.detect_books_in_frame()` is still used by startup-scan and
+  grip-place-test reports, but its `pick_point` shape is the older report-style
+  payload.
+- For hardware pick poses, prefer `vision.lateral_pose_provider`, which returns
+  direct `(arm_X, arm_Y, arm_Z)` tuples.
+
+---
+
 ## 1. 集成目标
 
-把 `vision/` 包接入 `主程序代码/` 的 `PickPlacePlan` 流水线，让队友的 MuJoCo
-仿真和未来真机机械臂能用真实视觉数据驱动 `pick` 点，而不是 CLI 硬编码。
+把 `vision/` 包接入 `主程序代码/` 的运动流水线，让真机机械臂能用真实视觉
+数据驱动 `pick` 点，而不是长期依赖 CLI 硬编码。当前阶段优先支持 bin 内
+书脊横向测距：X/Z 暂时由机械侧固定，Y 由视觉估计。
 
 设计原则：
-- **不动**队友核心代码（`controller.py / main.py 默认路径 / pick_place_plan.py /
-  motion_adapter.py / sim/ / sim_output/`）。
+- **不破坏**队友核心代码和已验证硬件路径；新增入口必须保持和
+  `target_sequence.py` 的正式命令生成链路兼容。
 - **加分支**：用 `config.USE_VISION_FOR_PICK` / `VISION_SHADOW_MODE` /
   `FAKE_VISION_PICK_POSE` 三个开关控制。默认全关，行为与队友原 demo 100% 一致。
 - **可独立验证**：在没有标定、没有相机的情况下，用 Mock Injection 也能证明
@@ -73,7 +195,46 @@ VISION_SHADOW_MODE: bool = False       # 影子模式：跑视觉 + 写日志，
 FAKE_VISION_PICK_POSE: Tuple | None    # 不为 None 时直接返回这个值（注入测试用）
 ```
 
-### 3.2 世界坐标提供者：`vision.world_pose_provider.get_pick_world_pose(title)`
+### 3.2 Current lateral pose provider: `vision.lateral_pose_provider`
+
+For the current real demo, use `lateral_pose_provider` rather than the older
+depth-from-book-height world provider.
+
+Single target:
+
+```python
+from vision.lateral_pose_provider import get_book_pick_pose
+
+pose = get_book_pick_pose(frame, "羊皮卷")
+# -> (250.0, arm_y_from_vision, 115.0)
+```
+
+All visible known books:
+
+```python
+from vision.lateral_pose_provider import get_all_book_pick_poses_from_camera
+
+candidates = get_all_book_pick_poses_from_camera()
+```
+
+Each candidate has:
+
+```python
+{
+    "title": str,
+    "pick": (250.0, arm_y_mm, 115.0),
+    "confidence": float,
+    "bbox": (x1, y1, x2, y2),
+}
+```
+
+The main integrated user is:
+
+```bash
+python3 主程序代码/main.py --auto-demo --place 0 250 140 --camera-index auto --dry-run
+```
+
+### 3.3 Legacy world coordinate provider: `vision.world_pose_provider.get_pick_world_pose(title)`
 
 返回值：`(world_x, world_y, world_z)` mm，**世界原点 = 机械臂底座 yaw 关节**。
 
@@ -95,7 +256,11 @@ vision.world_pose_provider.get_pick_world_pose(title)
        7. 返回 (world_x, world_y, world_z)
 ```
 
-### 3.3 三个 CLI flag
+This path remains in the tree as an experiment / compatibility path. It should
+not be treated as the current primary demo path unless it is explicitly
+revalidated against the physical setup.
+
+### 3.4 三个 CLI flag
 
 ```bash
 # Test A: 影子模式（不影响 demo 行为，仅写日志）
@@ -110,7 +275,7 @@ python 主程序代码/main.py --viewer \
 python 主程序代码/main.py --viewer --use-vision-for-pick
 ```
 
-### 3.4 优雅降级
+### 3.5 优雅降级
 
 `get_pick_world_pose` 任意一步失败 → 返回 `None`：
 - 相机打不开
@@ -549,7 +714,186 @@ x/y/z 还有 cm 级偏差，因为 `CAMERA_TRANSLATION_MM / CAMERA_ORIENTATION_M
 
 ---
 
-## 9. 文件清单速查
+## 9. Shelf Section / Slice Scanner v1
+
+新增 `主程序代码/vision/shelf_scanner.py`，作为 shelf 放书感知的第一版
+独立模块；当前只输出候选，不接管真机执行。
+
+当前规则：
+
+- 先用长竖直边缘检测框出左右两个 shelf section。
+- 每个 section 按物理宽度 `81 mm` 切成 `5` 个 slice。
+- 每个 slice 宽约 `16 mm`。
+- slice 局部中心坐标为约 `-32.4, -16.2, 0, +16.2, +32.4 mm`。
+- 最左 slice 得分 `30`，hint=`lean_left`，support=`left_wall`。
+- 最右 slice 得分 `30`，hint=`lean_right`，support=`right_wall`。
+- 中间三个 slice 得分 `10`，hint=`center`。
+- 当前 `status="unknown"`，后续再接 occupied/free 识别。
+- 用已知 section 宽度 `81 mm` 和相机内参 `fx` 估计相机到 shelf 正面的
+  深度：`depth_mm = fx * 81 / bbox_width_px`。这是 camera-relative depth，
+  不包含相机到机械臂底座的外参转换。
+
+在 `测试图像/test shelf.png` 上验证：
+
+- left section bbox: `[162, 123, 461, 1102]`
+- right section bbox: `[648, 123, 460, 1102]`
+- average camera depth: `169.4 mm`
+- debug overlay: `/private/tmp/test_shelf_5slice_scored.png`
+
+后续用 `测试图像/shelf2.png` 测试时发现真实云台视角会看到两侧挡板，
+中央分隔线可能只表现为一条强边。`shelf_scanner.py` 因此加入了
+strong-edge fallback：当固定四边界比例检测失败时，用最强结构边推断
+left/divider/right 三条边，并把 divider 同时作为左 section 右边界与右
+section 左边界。`shelf2.png` 当前结果：
+
+- left section bbox: `[386, 144, 465, 1152]`
+- right section bbox: `[851, 144, 465, 1152]`
+- average camera depth: `167.7 mm`
+- debug overlay: `/private/tmp/shelf2_5slice_scored.png`
+
+`shelf3.png` 是更远、更居中的视角。放宽 strong-edge fallback 阈值后可检测：
+
+- left section bbox: `[632, 129, 378, 1041]`
+- right section bbox: `[1010, 129, 351, 1041]`
+- average camera depth: `214.3 mm`
+- debug overlay: `/private/tmp/shelf3_depth_5slice_scored.png`
+- 注意：该图顶部 bbox 包含一段灰色背景上沿，横向 slice 仍可用；若后续要
+  用竖向 shelf 高度定位，需要进一步收紧 top/bottom 到实际可放书平面。
+
+OCR / edge preprocessing update:
+
+- Added `主程序代码/vision/image_preprocess.py`.
+- Edge-based detectors now have shared helpers for denoise, grayscale cleanup,
+  CLAHE, Canny, and morphology close.
+- `shelf_scanner.py` keeps the original grayscale edge path first, then falls
+  back to cleaned grayscale if border detection fails. This avoids hurting
+  already-clean synthetic or high-contrast views while still giving noisy camera
+  frames a cleanup path.
+- `ocr.py` keeps original-frame PaddleOCR first, then tries a conservative OCR
+  enhanced frame only if the original frame returns no text polygons.
+- Regression after this change:
+  - `test shelf.png`: complete, average depth `169.4 mm`
+  - `shelf2.png`: complete, average depth `167.7 mm`
+  - `shelf3.png`: complete, average depth `214.3 mm`
+
+注意：当前能稳定给 section/slice 像素位置和局部横向 mm 候选，但真实
+`depth_mm` 仍需要外参、AprilTag、已知尺寸尺度或实测相机到 shelf 平面距离。
+
+Book dimension / tilt metadata update:
+
+- `config.py` now defines two shared book size profiles:
+  - `compact_200x140x8`: height `200 mm`, width `140 mm`, thickness `8 mm`
+  - `tall_209x140x9`: height `209 mm`, width `140 mm`, thickness `9 mm`
+- `KNOWN_BOOK_DIMENSIONS_MM` now references those profiles while preserving
+  each title's `ocr_visible_height_mm` field for legacy depth experiments.
+- `vision.lateral_pose_provider` now includes these fields in each candidate:
+  - `tilt_deg`
+  - `tilt_direction`
+  - `suggested_place_tilt_deg`
+  - `book_dimensions_mm`
+- `vision.bin_scanner.detect_books_in_frame(frame)` also returns tilt and
+  dimension metadata.
+- `detected_books_loop.py` records tilt metadata in snapshots and shows a
+  human-readable tilt sentence in the Auto Demo report.
+- Verification with `测试图像/book1.jpg`: OCR recognized `聊斋志异`, confidence
+  `0.999`, tilt `+0.8 deg`, direction `near_vertical`, size profile
+  `compact_200x140x8`.
+
+OCR + entity binding update:
+
+- Added `主程序代码/vision/bin_slot_scanner.py`.
+- Current v1 output is a `BookInstance`-style dict that binds:
+  - OCR title / confidence / OCR bbox / OCR tilt
+  - edge-detected physical entity bbox / raw entity bbox / entity tilt
+  - book dimension metadata
+  - `association_score`
+- Entity detection uses the shared denoise / grayscale cleanup / Canny path,
+  then trims each coarse contour with robust edge-pixel percentiles. This keeps
+  the main book body while reducing shadow/background overreach.
+- This is not wired into hardware control yet. It is a candidate source for the
+  next bin-slot scanner, where slot geometry should provide the stable pick Y.
+- Verification with `测试图像/book1.jpg`:
+  - raw physical entity bbox `[2263, 416, 2777, 5299]`
+  - refined physical entity bbox `[2280, 468, 2535, 5189]`
+  - OCR title `聊斋志异` bbox `[2288, 874, 2484, 1513]`
+  - association score `1.0`
+  - OCR tilt `+0.8 deg`; entity tilt about `-2.8 deg`
+  - debug overlay `/private/tmp/book1_refined_percentile_edges_overlay.png`
+
+Startup scan integration update:
+
+- The existing `主程序代码/startup_scan.py` is now the two-view world
+  initialization path; no separate workflow file is used.
+- It scans only physical `left-90 deg` and `0 deg`, captures `left.png` and `center.png`,
+  then sends measured home/straight.
+- Hardware direction correction: current physical left-90 scan uses servo000
+  `P2167`; `P0833` was observed to turn the base the wrong way on the real arm.
+- `left.png` is processed through `vision.shelf_scanner` for shelf section/slice
+  candidates.
+- `center.png` is processed through `vision.bin_slot_scanner`,
+  `vision.bin_scanner`, and `vision.lateral_pose_provider` for OCR/entity-linked
+  books and pick candidates.
+- The snapshot now includes `shelf`, `bin`, and `task_queue` fields. It is still
+  a perception/planning snapshot and does not send pick/place hardware commands.
+
+Shelf scoring update:
+
+- `vision.shelf_scanner` now adds an image-axis score to every shelf slice.
+- The image axis is `frame_width / 2`; no camera extrinsics are used.
+- Current score components:
+  - base score
+  - wall support score
+  - image-axis distance bonus, max `+10`
+  - reserved adjacent-support score, currently `0`
+- This makes wall-supported slices nearer the camera/image center rank higher
+  than equally supported outer slices.
+- Verification with `测试图像/shelf2.png`:
+  - image axis `x=843 px`
+  - `left slice 4`: total `39.54`, wall `20`, axis `9.54`, distance `38.5 px`
+  - `right slice 0`: total `39.35`, wall `20`, axis `9.35`, distance `54.5 px`
+  - outer wall slices rank lower (`35.13` and `34.94`)
+  - debug overlay `/private/tmp/shelf2_axis_scored_overlay.png`
+
+Gripper clearance / release feasibility note:
+
+- Placement scoring must eventually include the physical gripper footprint, not
+  only shelf slice score.
+- A slice may look good visually but still be unsafe if the gripper cannot
+  enter, open, release, and retreat without pushing neighboring books.
+- Future decision fields should include:
+  - required free side for the chosen lean direction
+  - available clearance in adjacent slices / millimeters
+  - release feasibility
+  - expected fall/lean direction
+  - reason for any rejection
+- Conservative first rule: wall or adjacent-book support is not enough by
+  itself; the opposite side must also leave enough free tool space for the claw
+  and release motion.
+
+Bin grid local-scale depth update:
+
+- `vision.bin_slot_scanner` now includes `estimate_bin_grid_geometry(frame)`.
+- Purpose: estimate bin depth from visible local grid spans rather than relying
+  on full bin width, which is often blocked by books.
+- Known span hypotheses currently include `5 mm` divider thickness, `10 mm`
+  book/spine slot width, `12.5 mm`, `15 mm`, `20 mm`, `22.5 mm`, `25 mm`, and
+  `32.5 mm`.
+- The function scales the calibrated focal length to the actual frame width,
+  detects yellow/orange bin-grid spans in the bottom ROI, matches plausible
+  pixel widths to known physical spans, then uses `CAMERA_POSITION_IN_ARM_MM`
+  to convert camera-frame depth to arm-frame X depth.
+- Latest 2026-05-14 verification with the real startup-scan `center.png`:
+  - with `BIN_PICK_DEPTH_MM=320.0` and camera X offset `90.2 mm`
+  - selected `53 px` as `12.5 mm` -> camera depth `227.1 mm`,
+    arm X depth `317.3 mm`, confidence `0.997`
+  - this agrees with the user's measured real book-spine grasp plane of about
+    `320 mm`.
+  - selected arm X is the highest-confidence candidate rather than the
+    unweighted median, because tiny divider spans are noisier.
+
+---
+
+## 10. 文件清单速查
 
 ```
 Integrated Algorithm/
@@ -564,6 +908,8 @@ Integrated Algorithm/
 │       ├── ocr.py
 │       ├── spine_detector.py
 │       ├── bin_scanner.py
+│       ├── bin_slot_scanner.py [OCR title + edge entity binding]
+│       ├── shelf_scanner.py     [shelf section + 5-slice scoring]
 │       ├── intrinsics.py       [新版：针孔 + 外参]
 │       ├── world_pose_provider.py  [对接入口]
 │       ├── visual_overlay.py

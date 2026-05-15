@@ -38,9 +38,9 @@ GRIP_PLACE_VIEWS = (
         label="left",
         filename="left.png",
         joint0_deg=-90,
-        pwm=833,
+        pwm=2167,
         sections=("shelf_reference",),
-        description="-90 deg reference view; saved only, no A/B/C/D interpretation",
+        description="left 90 deg reference view; saved only, no A/B/C/D interpretation",
     ),
     ScanView(
         label="center",
@@ -146,7 +146,7 @@ def run_grip_place_test(
 
     wait_for_start_trigger(wait_trigger, dry_run=dry_run)
 
-    cv2_module, camera, detect_books_in_frame, import_error = _load_camera_and_vision()
+    cv2_module, camera, vision_modules, import_error = _load_camera_and_vision()
     if import_error is not None:
         print(f"[GRIP-PLACE] Vision/camera import failed: {import_error}")
 
@@ -213,7 +213,12 @@ def run_grip_place_test(
     finally:
         command_session.close()
 
-    snapshot["bin"] = _process_bin_frame(center_frame, detect_books_in_frame)
+    snapshot["bin"] = _process_bin_frame(
+        center_frame,
+        vision_modules,
+        cv2_module,
+        output_dir,
+    )
     books = snapshot["bin"].get("books", [])
     if books:
         snapshot["selected_book"] = books[0]

@@ -1,0 +1,12 @@
+label,x_mm,y_mm,z_mm,held_book_visible,return_book_visible,placed_book_visible,horizontal_end_link,base_only_from_previous
+pick_insert_ready,145.0,0.0,160.0,0,1,0,1,0
+pick_approach,180.0,0.0,115.0,0,1,0,1,0
+pick,220.0,0.0,115.0,0,1,0,1,0
+gripper_close_pose,220.0,0.0,115.0,1,0,0,1,0
+pick_lift,125.00000000000001,0.0,210.0,1,0,0,0,0
+place_transfer_base_only,0.0,220.0,210.0,1,0,0,1,1
+place_approach,0.0,250.0,210.0,1,0,0,1,0
+place_final,0.0,250.0,115.0,1,0,0,1,0
+gripper_open_pose,0.0,250.0,115.0,0,0,1,1,0
+place_backoff,0.0,200.0,115.0,0,0,1,1,0
+place_retreat,0.0,220.0,240.0,0,0,1,1,0

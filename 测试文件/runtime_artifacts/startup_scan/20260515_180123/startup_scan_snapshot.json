@@ -1,0 +1,2387 @@
+{
+  "timestamp": "2026-05-15T18:01:23",
+  "status": "complete",
+  "output_dir": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260515_180123",
+  "settle_seconds": 4.0,
+  "dry_run": false,
+  "views": {
+    "center": {
+      "joint0_deg": 0,
+      "pwm": 1500,
+      "sections": [
+        "bin"
+      ],
+      "description": "0 deg bin view",
+      "motion": {
+        "label": "center_base",
+        "command": "{#000P1500T2500!}",
+        "ok": true,
+        "dry_run": false,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260515_180123/center_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260515_180123/center.png",
+        "ok": true
+      }
+    },
+    "left": {
+      "joint0_deg": -87,
+      "pwm": 2144,
+      "sections": [
+        "shelf"
+      ],
+      "description": "left shelf/world-context view with slight yaw correction",
+      "motion": {
+        "label": "left_base",
+        "command": "{#000P2144T2500!}",
+        "ok": true,
+        "dry_run": false,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260515_180123/left_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260515_180123/left.png",
+        "ok": true
+      }
+    }
+  },
+  "bin": {
+    "source_view": "center",
+    "ok": true,
+    "books": [
+      {
+        "title": "墨菲定律",
+        "rel_x": -63.35977694240795,
+        "rel_y": 229.8,
+        "rel_z": 37.195142682408544,
+        "left_edge": -68.7290473322395,
+        "right_edge": -57.99050655257638,
+        "depth": 229.8,
+        "pick_point": {
+          "x": 320.0,
+          "y": 63.35977694240795,
+          "z": 115.0,
+          "source": "fixed_bin_pick_v1"
+        },
+        "confidence": 0.9992233514785767,
+        "tilt_deg": 0.0,
+        "tilt_direction": "near_vertical",
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        }
+      },
+      {
+        "title": "羊皮卷",
+        "rel_x": -1.0762404203617915,
+        "rel_y": 229.8,
+        "rel_z": 49.46251282742321,
+        "left_edge": -6.4455108101933565,
+        "right_edge": 4.2930299694697736,
+        "depth": 229.8,
+        "pick_point": {
+          "x": 320.0,
+          "y": 1.0762404203617915,
+          "z": 115.0,
+          "source": "fixed_bin_pick_v1"
+        },
+        "confidence": 0.9994924068450928,
+        "tilt_deg": 0.878027499472894,
+        "tilt_direction": "near_vertical",
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 33.0
+        }
+      },
+      {
+        "title": "人性的弱点",
+        "rel_x": 62.400467299424704,
+        "rel_y": 229.8,
+        "rel_z": 49.81981487048189,
+        "left_edge": 56.79256267004507,
+        "right_edge": 68.00837192880434,
+        "depth": 229.8,
+        "pick_point": {
+          "x": 320.0,
+          "y": -62.400467299424704,
+          "z": 115.0,
+          "source": "fixed_bin_pick_v1"
+        },
+        "confidence": 0.978580117225647,
+        "tilt_deg": 1.0964360839930283,
+        "tilt_direction": "near_vertical",
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        }
+      }
+    ],
+    "book_instances": [
+      {
+        "title": "墨菲定律",
+        "confidence": 0.9992233514785767,
+        "ocr_bbox": [
+          321,
+          92,
+          366,
+          312
+        ],
+        "entity_bbox": [
+          243,
+          21,
+          358,
+          718
+        ],
+        "raw_entity_bbox": [
+          215,
+          0,
+          360,
+          720
+        ],
+        "entity_quad": [
+          [
+            243,
+            21
+          ],
+          [
+            358,
+            21
+          ],
+          [
+            358,
+            718
+          ],
+          [
+            243,
+            718
+          ]
+        ],
+        "ocr_tilt_deg": 0.0,
+        "entity_tilt_deg": 8.710180282592773,
+        "association_score": 0.9494685990338165,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        },
+        "source": "ocr_edge_entity_v1"
+      },
+      {
+        "title": "羊皮卷",
+        "confidence": 0.9994924068450928,
+        "ocr_bbox": [
+          582,
+          85,
+          627,
+          216
+        ],
+        "entity_bbox": [
+          402,
+          11,
+          848,
+          714
+        ],
+        "raw_entity_bbox": [
+          396,
+          0,
+          852,
+          720
+        ],
+        "entity_quad": [
+          [
+            402,
+            11
+          ],
+          [
+            848,
+            11
+          ],
+          [
+            848,
+            714
+          ],
+          [
+            402,
+            714
+          ]
+        ],
+        "ocr_tilt_deg": 0.878027499472894,
+        "entity_tilt_deg": 0.0,
+        "association_score": 0.9931053811659193,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 33.0
+        },
+        "source": "ocr_edge_entity_v1"
+      },
+      {
+        "title": "人性的弱点",
+        "confidence": 0.978580117225647,
+        "ocr_bbox": [
+          847,
+          44,
+          894,
+          254
+        ],
+        "entity_bbox": [
+          851,
+          25,
+          1112,
+          718
+        ],
+        "raw_entity_bbox": [
+          848,
+          0,
+          1157,
+          720
+        ],
+        "entity_quad": [
+          [
+            851,
+            25
+          ],
+          [
+            1112,
+            25
+          ],
+          [
+            1112,
+            718
+          ],
+          [
+            851,
+            718
+          ]
+        ],
+        "ocr_tilt_deg": 1.0964360839930283,
+        "entity_tilt_deg": -1.7445144653320312,
+        "association_score": 0.9149303008070433,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        },
+        "source": "ocr_edge_entity_v1"
+      }
+    ],
+    "pick_candidates": [
+      {
+        "title": "羊皮卷",
+        "pick": [
+          309.5,
+          1.0300735697224372,
+          115.0
+        ],
+        "confidence": 0.9994924068450928,
+        "bbox": [
+          582,
+          85,
+          627,
+          216
+        ],
+        "pick_depth_source": "visible_bin_grid",
+        "bin_grid_geometry": {
+          "status": "complete",
+          "camera_depth_mm": 229.3,
+          "arm_depth_mm": 319.5,
+          "median_arm_depth_mm": 262.2,
+          "selected_span": {
+            "kind": "yellow_segment",
+            "x1_px": 635,
+            "x2_px": 655,
+            "width_px": 21,
+            "matched_width_mm": 5.0,
+            "camera_depth_mm": 229.3,
+            "arm_depth_mm": 319.5,
+            "confidence": 1.0
+          },
+          "depth_method": "visible_bin_grid_local_spans_with_camera_extrinsics",
+          "fx_scaled_px": 962.98,
+          "camera_x_offset_mm": 90.2,
+          "roi_px": [
+            486,
+            504,
+            819,
+            706
+          ],
+          "known_spans_mm": [
+            5.0,
+            10.0,
+            12.5,
+            15.0,
+            20.0,
+            22.5,
+            25.0,
+            32.5
+          ],
+          "camera_depth_plausible_range_mm": [
+            90.0,
+            260.0
+          ],
+          "arm_depth_plausible_range_mm": [
+            190.0,
+            340.0
+          ],
+          "edge_peaks_px": [
+            521,
+            539,
+            637,
+            656,
+            696,
+            750,
+            767,
+            811
+          ],
+          "spans": [
+            {
+              "kind": "yellow_segment",
+              "x1_px": 486,
+              "x2_px": 513,
+              "width_px": 28,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 172.0,
+              "arm_depth_mm": 262.2,
+              "confidence": 0.289
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 515,
+              "x2_px": 542,
+              "width_px": 28,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 172.0,
+              "arm_depth_mm": 262.2,
+              "confidence": 0.289
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 635,
+              "x2_px": 655,
+              "width_px": 21,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 229.3,
+              "arm_depth_mm": 319.5,
+              "confidence": 1.0
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 684,
+              "x2_px": 716,
+              "width_px": 33,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 145.9,
+              "arm_depth_mm": 236.1,
+              "confidence": 0.012
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 738,
+              "x2_px": 770,
+              "width_px": 33,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 145.9,
+              "arm_depth_mm": 236.1,
+              "confidence": 0.012
+            }
+          ]
+        },
+        "tilt_deg": 0.878027499472894,
+        "tilt_direction": "near_vertical",
+        "suggested_place_tilt_deg": 0.878027499472894,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 33.0
+        }
+      },
+      {
+        "title": "人性的弱点",
+        "pick": [
+          309.5,
+          -59.391342424005124,
+          115.0
+        ],
+        "confidence": 0.978580117225647,
+        "bbox": [
+          847,
+          44,
+          894,
+          254
+        ],
+        "pick_depth_source": "visible_bin_grid",
+        "bin_grid_geometry": {
+          "status": "complete",
+          "camera_depth_mm": 229.3,
+          "arm_depth_mm": 319.5,
+          "median_arm_depth_mm": 262.2,
+          "selected_span": {
+            "kind": "yellow_segment",
+            "x1_px": 635,
+            "x2_px": 655,
+            "width_px": 21,
+            "matched_width_mm": 5.0,
+            "camera_depth_mm": 229.3,
+            "arm_depth_mm": 319.5,
+            "confidence": 1.0
+          },
+          "depth_method": "visible_bin_grid_local_spans_with_camera_extrinsics",
+          "fx_scaled_px": 962.98,
+          "camera_x_offset_mm": 90.2,
+          "roi_px": [
+            486,
+            504,
+            819,
+            706
+          ],
+          "known_spans_mm": [
+            5.0,
+            10.0,
+            12.5,
+            15.0,
+            20.0,
+            22.5,
+            25.0,
+            32.5
+          ],
+          "camera_depth_plausible_range_mm": [
+            90.0,
+            260.0
+          ],
+          "arm_depth_plausible_range_mm": [
+            190.0,
+            340.0
+          ],
+          "edge_peaks_px": [
+            521,
+            539,
+            637,
+            656,
+            696,
+            750,
+            767,
+            811
+          ],
+          "spans": [
+            {
+              "kind": "yellow_segment",
+              "x1_px": 486,
+              "x2_px": 513,
+              "width_px": 28,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 172.0,
+              "arm_depth_mm": 262.2,
+              "confidence": 0.289
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 515,
+              "x2_px": 542,
+              "width_px": 28,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 172.0,
+              "arm_depth_mm": 262.2,
+              "confidence": 0.289
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 635,
+              "x2_px": 655,
+              "width_px": 21,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 229.3,
+              "arm_depth_mm": 319.5,
+              "confidence": 1.0
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 684,
+              "x2_px": 716,
+              "width_px": 33,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 145.9,
+              "arm_depth_mm": 236.1,
+              "confidence": 0.012
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 738,
+              "x2_px": 770,
+              "width_px": 33,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 145.9,
+              "arm_depth_mm": 236.1,
+              "confidence": 0.012
+            }
+          ]
+        },
+        "tilt_deg": 1.0964360839930283,
+        "tilt_direction": "near_vertical",
+        "suggested_place_tilt_deg": 1.0964360839930283,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        }
+      },
+      {
+        "title": "墨菲定律",
+        "pick": [
+          309.5,
+          60.35873028357327,
+          115.0
+        ],
+        "confidence": 0.9992233514785767,
+        "bbox": [
+          321,
+          92,
+          366,
+          312
+        ],
+        "pick_depth_source": "visible_bin_grid",
+        "bin_grid_geometry": {
+          "status": "complete",
+          "camera_depth_mm": 229.3,
+          "arm_depth_mm": 319.5,
+          "median_arm_depth_mm": 262.2,
+          "selected_span": {
+            "kind": "yellow_segment",
+            "x1_px": 635,
+            "x2_px": 655,
+            "width_px": 21,
+            "matched_width_mm": 5.0,
+            "camera_depth_mm": 229.3,
+            "arm_depth_mm": 319.5,
+            "confidence": 1.0
+          },
+          "depth_method": "visible_bin_grid_local_spans_with_camera_extrinsics",
+          "fx_scaled_px": 962.98,
+          "camera_x_offset_mm": 90.2,
+          "roi_px": [
+            486,
+            504,
+            819,
+            706
+          ],
+          "known_spans_mm": [
+            5.0,
+            10.0,
+            12.5,
+            15.0,
+            20.0,
+            22.5,
+            25.0,
+            32.5
+          ],
+          "camera_depth_plausible_range_mm": [
+            90.0,
+            260.0
+          ],
+          "arm_depth_plausible_range_mm": [
+            190.0,
+            340.0
+          ],
+          "edge_peaks_px": [
+            521,
+            539,
+            637,
+            656,
+            696,
+            750,
+            767,
+            811
+          ],
+          "spans": [
+            {
+              "kind": "yellow_segment",
+              "x1_px": 486,
+              "x2_px": 513,
+              "width_px": 28,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 172.0,
+              "arm_depth_mm": 262.2,
+              "confidence": 0.289
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 515,
+              "x2_px": 542,
+              "width_px": 28,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 172.0,
+              "arm_depth_mm": 262.2,
+              "confidence": 0.289
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 635,
+              "x2_px": 655,
+              "width_px": 21,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 229.3,
+              "arm_depth_mm": 319.5,
+              "confidence": 1.0
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 684,
+              "x2_px": 716,
+              "width_px": 33,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 145.9,
+              "arm_depth_mm": 236.1,
+              "confidence": 0.012
+            },
+            {
+              "kind": "yellow_segment",
+              "x1_px": 738,
+              "x2_px": 770,
+              "width_px": 33,
+              "matched_width_mm": 5.0,
+              "camera_depth_mm": 145.9,
+              "arm_depth_mm": 236.1,
+              "confidence": 0.012
+            }
+          ]
+        },
+        "tilt_deg": 0.0,
+        "tilt_direction": "near_vertical",
+        "suggested_place_tilt_deg": 0.0,
+        "book_dimensions_mm": {
+          "size_profile": "compact_200x140x8",
+          "spine_height": 200.0,
+          "cover_width": 140.0,
+          "thickness": 8.0,
+          "ocr_visible_height_mm": 95.0
+        }
+      }
+    ],
+    "unknown_texts": [],
+    "book_count": 3,
+    "book_instances_overlay_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260515_180123/center_book_instances_overlay.png",
+    "bin_grid_geometry": {
+      "status": "complete",
+      "camera_depth_mm": 229.3,
+      "arm_depth_mm": 319.5,
+      "median_arm_depth_mm": 262.2,
+      "selected_span": {
+        "kind": "yellow_segment",
+        "x1_px": 635,
+        "x2_px": 655,
+        "width_px": 21,
+        "matched_width_mm": 5.0,
+        "camera_depth_mm": 229.3,
+        "arm_depth_mm": 319.5,
+        "confidence": 1.0
+      },
+      "depth_method": "visible_bin_grid_local_spans_with_camera_extrinsics",
+      "fx_scaled_px": 962.98,
+      "camera_x_offset_mm": 90.2,
+      "roi_px": [
+        486,
+        504,
+        819,
+        706
+      ],
+      "known_spans_mm": [
+        5.0,
+        10.0,
+        12.5,
+        15.0,
+        20.0,
+        22.5,
+        25.0,
+        32.5
+      ],
+      "camera_depth_plausible_range_mm": [
+        90.0,
+        260.0
+      ],
+      "arm_depth_plausible_range_mm": [
+        190.0,
+        340.0
+      ],
+      "edge_peaks_px": [
+        521,
+        539,
+        637,
+        656,
+        696,
+        750,
+        767,
+        811
+      ],
+      "spans": [
+        {
+          "kind": "yellow_segment",
+          "x1_px": 486,
+          "x2_px": 513,
+          "width_px": 28,
+          "matched_width_mm": 5.0,
+          "camera_depth_mm": 172.0,
+          "arm_depth_mm": 262.2,
+          "confidence": 0.289
+        },
+        {
+          "kind": "yellow_segment",
+          "x1_px": 515,
+          "x2_px": 542,
+          "width_px": 28,
+          "matched_width_mm": 5.0,
+          "camera_depth_mm": 172.0,
+          "arm_depth_mm": 262.2,
+          "confidence": 0.289
+        },
+        {
+          "kind": "yellow_segment",
+          "x1_px": 635,
+          "x2_px": 655,
+          "width_px": 21,
+          "matched_width_mm": 5.0,
+          "camera_depth_mm": 229.3,
+          "arm_depth_mm": 319.5,
+          "confidence": 1.0
+        },
+        {
+          "kind": "yellow_segment",
+          "x1_px": 684,
+          "x2_px": 716,
+          "width_px": 33,
+          "matched_width_mm": 5.0,
+          "camera_depth_mm": 145.9,
+          "arm_depth_mm": 236.1,
+          "confidence": 0.012
+        },
+        {
+          "kind": "yellow_segment",
+          "x1_px": 738,
+          "x2_px": 770,
+          "width_px": 33,
+          "matched_width_mm": 5.0,
+          "camera_depth_mm": 145.9,
+          "arm_depth_mm": 236.1,
+          "confidence": 0.012
+        }
+      ]
+    },
+    "bin_grid_overlay_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260515_180123/center_bin_grid_overlay.png"
+  },
+  "shelf": {
+    "source_view": "left",
+    "ok": true,
+    "sections": [
+      {
+        "bbox_px": [
+          330,
+          114,
+          297,
+          570
+        ],
+        "quad_px": [
+          [
+            411,
+            581
+          ],
+          [
+            587,
+            581
+          ],
+          [
+            534,
+            677
+          ],
+          [
+            407,
+            677
+          ]
+        ],
+        "center_px": [
+          478.5,
+          399.0
+        ],
+        "width_mm": 81.0,
+        "camera_depth_mm": 514.9,
+        "depth_method": "known_section_width_pinhole",
+        "slice_count": 5,
+        "confidence": 0.85,
+        "slices": [
+          {
+            "index": 0,
+            "bbox_px": [
+              407,
+              581,
+              39,
+              96
+            ],
+            "quad_px": [
+              [
+                411,
+                581
+              ],
+              [
+                446,
+                581
+              ],
+              [
+                432,
+                677
+              ],
+              [
+                407,
+                677
+              ]
+            ],
+            "center_px": [
+              424.0,
+              629.0
+            ],
+            "center_x_mm_local": 8.1,
+            "center_x_mm_centered": -32.4,
+            "width_mm": 16.2,
+            "status": "free_candidate",
+            "score": 35.62,
+            "support_score": 20.0,
+            "image_axis_score": 5.62,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 280.3,
+            "occupancy_score": 0.0,
+            "occupancy_source": "not_measured",
+            "placement_hint": "lean_left",
+            "support_side": "left_wall",
+            "reason": "edge slice has left wall support; image-axis bonus 5.6; occupancy penalty 0.0"
+          },
+          {
+            "index": 1,
+            "bbox_px": [
+              432,
+              581,
+              49,
+              96
+            ],
+            "quad_px": [
+              [
+                446,
+                581
+              ],
+              [
+                481,
+                581
+              ],
+              [
+                458,
+                677
+              ],
+              [
+                432,
+                677
+              ]
+            ],
+            "center_px": [
+              454.2,
+              629.0
+            ],
+            "center_x_mm_local": 24.3,
+            "center_x_mm_centered": -16.2,
+            "width_mm": 16.2,
+            "status": "free_candidate",
+            "score": 16.55,
+            "support_score": 0.0,
+            "image_axis_score": 6.55,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 220.9,
+            "occupancy_score": 0.0,
+            "occupancy_source": "not_measured",
+            "placement_hint": "center",
+            "support_side": "none",
+            "reason": "interior slice; adjacent support 0.0; image-axis bonus 6.5; occupancy penalty 0.0"
+          },
+          {
+            "index": 2,
+            "bbox_px": [
+              458,
+              581,
+              59,
+              96
+            ],
+            "quad_px": [
+              [
+                481,
+                581
+              ],
+              [
+                517,
+                581
+              ],
+              [
+                483,
+                677
+              ],
+              [
+                458,
+                677
+              ]
+            ],
+            "center_px": [
+              484.8,
+              629.0
+            ],
+            "center_x_mm_local": 40.5,
+            "center_x_mm_centered": 0.0,
+            "width_mm": 16.2,
+            "status": "free_candidate",
+            "score": 17.48,
+            "support_score": 0.0,
+            "image_axis_score": 7.48,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 161.5,
+            "occupancy_score": 0.0,
+            "occupancy_source": "not_measured",
+            "placement_hint": "center",
+            "support_side": "none",
+            "reason": "interior slice; adjacent support 0.0; image-axis bonus 7.5; occupancy penalty 0.0"
+          },
+          {
+            "index": 3,
+            "bbox_px": [
+              483,
+              581,
+              69,
+              96
+            ],
+            "quad_px": [
+              [
+                517,
+                581
+              ],
+              [
+                552,
+                581
+              ],
+              [
+                509,
+                677
+              ],
+              [
+                483,
+                677
+              ]
+            ],
+            "center_px": [
+              515.2,
+              629.0
+            ],
+            "center_x_mm_local": 56.7,
+            "center_x_mm_centered": 16.2,
+            "width_mm": 16.2,
+            "status": "free_candidate",
+            "score": 18.4,
+            "support_score": 0.0,
+            "image_axis_score": 8.4,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 102.1,
+            "occupancy_score": 0.0,
+            "occupancy_source": "not_measured",
+            "placement_hint": "center",
+            "support_side": "none",
+            "reason": "interior slice; adjacent support 0.0; image-axis bonus 8.4; occupancy penalty 0.0"
+          },
+          {
+            "index": 4,
+            "bbox_px": [
+              509,
+              581,
+              78,
+              96
+            ],
+            "quad_px": [
+              [
+                552,
+                581
+              ],
+              [
+                587,
+                581
+              ],
+              [
+                534,
+                677
+              ],
+              [
+                509,
+                677
+              ]
+            ],
+            "center_px": [
+              545.5,
+              629.0
+            ],
+            "center_x_mm_local": 72.9,
+            "center_x_mm_centered": 32.4,
+            "width_mm": 16.2,
+            "status": "free_candidate",
+            "score": 39.33,
+            "support_score": 20.0,
+            "image_axis_score": 9.33,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 42.7,
+            "occupancy_score": 0.0,
+            "occupancy_source": "not_measured",
+            "placement_hint": "lean_right",
+            "support_side": "right_wall",
+            "reason": "edge slice has right wall support; image-axis bonus 9.3; occupancy penalty 0.0"
+          }
+        ],
+        "id": "left"
+      },
+      {
+        "bbox_px": [
+          627,
+          114,
+          234,
+          570
+        ],
+        "quad_px": [
+          [
+            638,
+            583
+          ],
+          [
+            764,
+            583
+          ],
+          [
+            767,
+            677
+          ],
+          [
+            639,
+            677
+          ]
+        ],
+        "center_px": [
+          744.0,
+          399.0
+        ],
+        "width_mm": 81.0,
+        "camera_depth_mm": 614.2,
+        "depth_method": "known_section_width_pinhole",
+        "slice_count": 5,
+        "confidence": 0.81,
+        "slices": [
+          {
+            "index": 0,
+            "bbox_px": [
+              638,
+              583,
+              27,
+              94
+            ],
+            "quad_px": [
+              [
+                638,
+                583
+              ],
+              [
+                663,
+                583
+              ],
+              [
+                665,
+                677
+              ],
+              [
+                639,
+                677
+              ]
+            ],
+            "center_px": [
+              651.2,
+              630.0
+            ],
+            "center_x_mm_local": 8.1,
+            "center_x_mm_centered": -32.4,
+            "width_mm": 16.2,
+            "status": "free_candidate",
+            "score": 39.84,
+            "support_score": 20.0,
+            "image_axis_score": 9.84,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 10.4,
+            "occupancy_score": 0.0,
+            "occupancy_source": "not_measured",
+            "placement_hint": "lean_left",
+            "support_side": "left_wall",
+            "reason": "edge slice has left wall support; image-axis bonus 9.8; occupancy penalty 0.0"
+          },
+          {
+            "index": 1,
+            "bbox_px": [
+              663,
+              583,
+              27,
+              94
+            ],
+            "quad_px": [
+              [
+                663,
+                583
+              ],
+              [
+                688,
+                583
+              ],
+              [
+                690,
+                677
+              ],
+              [
+                665,
+                677
+              ]
+            ],
+            "center_px": [
+              676.5,
+              630.0
+            ],
+            "center_x_mm_local": 24.3,
+            "center_x_mm_centered": -16.2,
+            "width_mm": 16.2,
+            "status": "free_candidate",
+            "score": 19.11,
+            "support_score": 0.0,
+            "image_axis_score": 9.11,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 57.2,
+            "occupancy_score": 0.0,
+            "occupancy_source": "not_measured",
+            "placement_hint": "center",
+            "support_side": "none",
+            "reason": "interior slice; adjacent support 0.0; image-axis bonus 9.1; occupancy penalty 0.0"
+          },
+          {
+            "index": 2,
+            "bbox_px": [
+              688,
+              583,
+              28,
+              94
+            ],
+            "quad_px": [
+              [
+                688,
+                583
+              ],
+              [
+                714,
+                583
+              ],
+              [
+                716,
+                677
+              ],
+              [
+                690,
+                677
+              ]
+            ],
+            "center_px": [
+              702.0,
+              630.0
+            ],
+            "center_x_mm_local": 40.5,
+            "center_x_mm_centered": 0.0,
+            "width_mm": 16.2,
+            "status": "free_candidate",
+            "score": 18.38,
+            "support_score": 0.0,
+            "image_axis_score": 8.38,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 104.0,
+            "occupancy_score": 0.0,
+            "occupancy_source": "not_measured",
+            "placement_hint": "center",
+            "support_side": "none",
+            "reason": "interior slice; adjacent support 0.0; image-axis bonus 8.4; occupancy penalty 0.0"
+          },
+          {
+            "index": 3,
+            "bbox_px": [
+              714,
+              583,
+              27,
+              94
+            ],
+            "quad_px": [
+              [
+                714,
+                583
+              ],
+              [
+                739,
+                583
+              ],
+              [
+                741,
+                677
+              ],
+              [
+                716,
+                677
+              ]
+            ],
+            "center_px": [
+              727.5,
+              630.0
+            ],
+            "center_x_mm_local": 56.7,
+            "center_x_mm_centered": 16.2,
+            "width_mm": 16.2,
+            "status": "free_candidate",
+            "score": 17.64,
+            "support_score": 0.0,
+            "image_axis_score": 7.64,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 150.8,
+            "occupancy_score": 0.0,
+            "occupancy_source": "not_measured",
+            "placement_hint": "center",
+            "support_side": "none",
+            "reason": "interior slice; adjacent support 0.0; image-axis bonus 7.6; occupancy penalty 0.0"
+          },
+          {
+            "index": 4,
+            "bbox_px": [
+              739,
+              583,
+              28,
+              94
+            ],
+            "quad_px": [
+              [
+                739,
+                583
+              ],
+              [
+                764,
+                583
+              ],
+              [
+                767,
+                677
+              ],
+              [
+                741,
+                677
+              ]
+            ],
+            "center_px": [
+              752.8,
+              630.0
+            ],
+            "center_x_mm_local": 72.9,
+            "center_x_mm_centered": 32.4,
+            "width_mm": 16.2,
+            "status": "free_candidate",
+            "score": 36.91,
+            "support_score": 20.0,
+            "image_axis_score": 6.91,
+            "adjacent_support_score": 0.0,
+            "image_axis_distance_px": 197.6,
+            "occupancy_score": 0.0,
+            "occupancy_source": "not_measured",
+            "placement_hint": "lean_right",
+            "support_side": "right_wall",
+            "reason": "edge slice has right wall support; image-axis bonus 6.9; occupancy penalty 0.0"
+          }
+        ],
+        "id": "right"
+      }
+    ],
+    "ranked_candidates": [
+      {
+        "section_id": "right",
+        "slice_index": 0,
+        "center_px": [
+          651.2,
+          630.0
+        ],
+        "center_x_mm_local": 8.1,
+        "center_x_mm_centered": -32.4,
+        "camera_depth_mm": 614.2,
+        "fixed_z_mm": 140.0,
+        "score": 39.84,
+        "support_score": 20.0,
+        "image_axis_score": 9.84,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 10.4,
+        "occupancy_score": 0.0,
+        "occupancy_source": "not_measured",
+        "placement_hint": "lean_left",
+        "support_side": "left_wall",
+        "status": "free_candidate",
+        "reason": "edge slice has left wall support; image-axis bonus 9.8; occupancy penalty 0.0"
+      },
+      {
+        "section_id": "left",
+        "slice_index": 4,
+        "center_px": [
+          545.5,
+          629.0
+        ],
+        "center_x_mm_local": 72.9,
+        "center_x_mm_centered": 32.4,
+        "camera_depth_mm": 514.9,
+        "fixed_z_mm": 140.0,
+        "score": 39.33,
+        "support_score": 20.0,
+        "image_axis_score": 9.33,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 42.7,
+        "occupancy_score": 0.0,
+        "occupancy_source": "not_measured",
+        "placement_hint": "lean_right",
+        "support_side": "right_wall",
+        "status": "free_candidate",
+        "reason": "edge slice has right wall support; image-axis bonus 9.3; occupancy penalty 0.0"
+      },
+      {
+        "section_id": "right",
+        "slice_index": 4,
+        "center_px": [
+          752.8,
+          630.0
+        ],
+        "center_x_mm_local": 72.9,
+        "center_x_mm_centered": 32.4,
+        "camera_depth_mm": 614.2,
+        "fixed_z_mm": 140.0,
+        "score": 36.91,
+        "support_score": 20.0,
+        "image_axis_score": 6.91,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 197.6,
+        "occupancy_score": 0.0,
+        "occupancy_source": "not_measured",
+        "placement_hint": "lean_right",
+        "support_side": "right_wall",
+        "status": "free_candidate",
+        "reason": "edge slice has right wall support; image-axis bonus 6.9; occupancy penalty 0.0"
+      },
+      {
+        "section_id": "left",
+        "slice_index": 0,
+        "center_px": [
+          424.0,
+          629.0
+        ],
+        "center_x_mm_local": 8.1,
+        "center_x_mm_centered": -32.4,
+        "camera_depth_mm": 514.9,
+        "fixed_z_mm": 140.0,
+        "score": 35.62,
+        "support_score": 20.0,
+        "image_axis_score": 5.62,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 280.3,
+        "occupancy_score": 0.0,
+        "occupancy_source": "not_measured",
+        "placement_hint": "lean_left",
+        "support_side": "left_wall",
+        "status": "free_candidate",
+        "reason": "edge slice has left wall support; image-axis bonus 5.6; occupancy penalty 0.0"
+      },
+      {
+        "section_id": "right",
+        "slice_index": 1,
+        "center_px": [
+          676.5,
+          630.0
+        ],
+        "center_x_mm_local": 24.3,
+        "center_x_mm_centered": -16.2,
+        "camera_depth_mm": 614.2,
+        "fixed_z_mm": 140.0,
+        "score": 19.11,
+        "support_score": 0.0,
+        "image_axis_score": 9.11,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 57.2,
+        "occupancy_score": 0.0,
+        "occupancy_source": "not_measured",
+        "placement_hint": "center",
+        "support_side": "none",
+        "status": "free_candidate",
+        "reason": "interior slice; adjacent support 0.0; image-axis bonus 9.1; occupancy penalty 0.0"
+      },
+      {
+        "section_id": "left",
+        "slice_index": 3,
+        "center_px": [
+          515.2,
+          629.0
+        ],
+        "center_x_mm_local": 56.7,
+        "center_x_mm_centered": 16.2,
+        "camera_depth_mm": 514.9,
+        "fixed_z_mm": 140.0,
+        "score": 18.4,
+        "support_score": 0.0,
+        "image_axis_score": 8.4,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 102.1,
+        "occupancy_score": 0.0,
+        "occupancy_source": "not_measured",
+        "placement_hint": "center",
+        "support_side": "none",
+        "status": "free_candidate",
+        "reason": "interior slice; adjacent support 0.0; image-axis bonus 8.4; occupancy penalty 0.0"
+      },
+      {
+        "section_id": "right",
+        "slice_index": 2,
+        "center_px": [
+          702.0,
+          630.0
+        ],
+        "center_x_mm_local": 40.5,
+        "center_x_mm_centered": 0.0,
+        "camera_depth_mm": 614.2,
+        "fixed_z_mm": 140.0,
+        "score": 18.38,
+        "support_score": 0.0,
+        "image_axis_score": 8.38,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 104.0,
+        "occupancy_score": 0.0,
+        "occupancy_source": "not_measured",
+        "placement_hint": "center",
+        "support_side": "none",
+        "status": "free_candidate",
+        "reason": "interior slice; adjacent support 0.0; image-axis bonus 8.4; occupancy penalty 0.0"
+      },
+      {
+        "section_id": "right",
+        "slice_index": 3,
+        "center_px": [
+          727.5,
+          630.0
+        ],
+        "center_x_mm_local": 56.7,
+        "center_x_mm_centered": 16.2,
+        "camera_depth_mm": 614.2,
+        "fixed_z_mm": 140.0,
+        "score": 17.64,
+        "support_score": 0.0,
+        "image_axis_score": 7.64,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 150.8,
+        "occupancy_score": 0.0,
+        "occupancy_source": "not_measured",
+        "placement_hint": "center",
+        "support_side": "none",
+        "status": "free_candidate",
+        "reason": "interior slice; adjacent support 0.0; image-axis bonus 7.6; occupancy penalty 0.0"
+      },
+      {
+        "section_id": "left",
+        "slice_index": 2,
+        "center_px": [
+          484.8,
+          629.0
+        ],
+        "center_x_mm_local": 40.5,
+        "center_x_mm_centered": 0.0,
+        "camera_depth_mm": 514.9,
+        "fixed_z_mm": 140.0,
+        "score": 17.48,
+        "support_score": 0.0,
+        "image_axis_score": 7.48,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 161.5,
+        "occupancy_score": 0.0,
+        "occupancy_source": "not_measured",
+        "placement_hint": "center",
+        "support_side": "none",
+        "status": "free_candidate",
+        "reason": "interior slice; adjacent support 0.0; image-axis bonus 7.5; occupancy penalty 0.0"
+      },
+      {
+        "section_id": "left",
+        "slice_index": 1,
+        "center_px": [
+          454.2,
+          629.0
+        ],
+        "center_x_mm_local": 24.3,
+        "center_x_mm_centered": -16.2,
+        "camera_depth_mm": 514.9,
+        "fixed_z_mm": 140.0,
+        "score": 16.55,
+        "support_score": 0.0,
+        "image_axis_score": 6.55,
+        "adjacent_support_score": 0.0,
+        "image_axis_distance_px": 220.9,
+        "occupancy_score": 0.0,
+        "occupancy_source": "not_measured",
+        "placement_hint": "center",
+        "support_side": "none",
+        "status": "free_candidate",
+        "reason": "interior slice; adjacent support 0.0; image-axis bonus 6.5; occupancy penalty 0.0"
+      }
+    ],
+    "status": "complete",
+    "section_width_mm": 81.0,
+    "camera_depth_mm": 564.5,
+    "depth_method": "known_section_width_pinhole",
+    "depth_note": "Camera-relative depth only; no camera-to-arm extrinsics applied.",
+    "slice_count": 5,
+    "fixed_z_mm": 140.0,
+    "overlay_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260515_180123/left_shelf_overlay.png"
+  },
+  "shelf_world_model": {
+    "source": "startup_scan_left_view",
+    "strategy": "A_initialize_once_then_update_world_model",
+    "coordinate_note": "Temporary demo arm-frame placement model: X comes from initialized shelf slice; Y/Z are fixed demo safety values from config.",
+    "place_y_mm": 250.0,
+    "place_z_mm": 140.0,
+    "section_width_mm": 81.0,
+    "section_gap_mm": 0.0,
+    "sections": [
+      {
+        "section_id": "left",
+        "section_label": "A",
+        "bbox_px": [
+          330,
+          114,
+          297,
+          570
+        ],
+        "quad_px": [
+          [
+            411,
+            581
+          ],
+          [
+            587,
+            581
+          ],
+          [
+            534,
+            677
+          ],
+          [
+            407,
+            677
+          ]
+        ],
+        "camera_depth_mm": 514.9,
+        "world_x_offset_mm": -40.5,
+        "slice_ids": [
+          "left:0",
+          "left:1",
+          "left:2",
+          "left:3",
+          "left:4"
+        ]
+      },
+      {
+        "section_id": "right",
+        "section_label": "B",
+        "bbox_px": [
+          627,
+          114,
+          234,
+          570
+        ],
+        "quad_px": [
+          [
+            638,
+            583
+          ],
+          [
+            764,
+            583
+          ],
+          [
+            767,
+            677
+          ],
+          [
+            639,
+            677
+          ]
+        ],
+        "camera_depth_mm": 614.2,
+        "world_x_offset_mm": 40.5,
+        "slice_ids": [
+          "right:0",
+          "right:1",
+          "right:2",
+          "right:3",
+          "right:4"
+        ]
+      }
+    ],
+    "slots": [
+      {
+        "slot_id": "right:0",
+        "section_id": "right",
+        "section_label": "B",
+        "slice_index": 0,
+        "place": [
+          20.1,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": 8.1,
+        "edge_inset_mm": 12.0,
+        "status": "free_candidate",
+        "score": 39.84,
+        "support_side": "left_wall",
+        "placement_hint": "lean_left",
+        "occupancy_score": 0.0,
+        "center_px": [
+          651.2,
+          630.0
+        ],
+        "quad_px": [
+          [
+            638,
+            583
+          ],
+          [
+            663,
+            583
+          ],
+          [
+            665,
+            677
+          ],
+          [
+            639,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 1
+      },
+      {
+        "slot_id": "left:4",
+        "section_id": "left",
+        "section_label": "A",
+        "slice_index": 4,
+        "place": [
+          -20.1,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": -8.1,
+        "edge_inset_mm": -12.0,
+        "status": "free_candidate",
+        "score": 39.33,
+        "support_side": "right_wall",
+        "placement_hint": "lean_right",
+        "occupancy_score": 0.0,
+        "center_px": [
+          545.5,
+          629.0
+        ],
+        "quad_px": [
+          [
+            552,
+            581
+          ],
+          [
+            587,
+            581
+          ],
+          [
+            534,
+            677
+          ],
+          [
+            509,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 2
+      },
+      {
+        "slot_id": "right:4",
+        "section_id": "right",
+        "section_label": "B",
+        "slice_index": 4,
+        "place": [
+          60.9,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": 72.9,
+        "edge_inset_mm": -12.0,
+        "status": "free_candidate",
+        "score": 36.91,
+        "support_side": "right_wall",
+        "placement_hint": "lean_right",
+        "occupancy_score": 0.0,
+        "center_px": [
+          752.8,
+          630.0
+        ],
+        "quad_px": [
+          [
+            739,
+            583
+          ],
+          [
+            764,
+            583
+          ],
+          [
+            767,
+            677
+          ],
+          [
+            741,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 3
+      },
+      {
+        "slot_id": "left:0",
+        "section_id": "left",
+        "section_label": "A",
+        "slice_index": 0,
+        "place": [
+          -60.9,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": -72.9,
+        "edge_inset_mm": 12.0,
+        "status": "free_candidate",
+        "score": 35.62,
+        "support_side": "left_wall",
+        "placement_hint": "lean_left",
+        "occupancy_score": 0.0,
+        "center_px": [
+          424.0,
+          629.0
+        ],
+        "quad_px": [
+          [
+            411,
+            581
+          ],
+          [
+            446,
+            581
+          ],
+          [
+            432,
+            677
+          ],
+          [
+            407,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 4
+      },
+      {
+        "slot_id": "right:1",
+        "section_id": "right",
+        "section_label": "B",
+        "slice_index": 1,
+        "place": [
+          24.3,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": 24.3,
+        "edge_inset_mm": 0.0,
+        "status": "free_candidate",
+        "score": 19.11,
+        "support_side": "none",
+        "placement_hint": "center",
+        "occupancy_score": 0.0,
+        "center_px": [
+          676.5,
+          630.0
+        ],
+        "quad_px": [
+          [
+            663,
+            583
+          ],
+          [
+            688,
+            583
+          ],
+          [
+            690,
+            677
+          ],
+          [
+            665,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 5
+      },
+      {
+        "slot_id": "left:3",
+        "section_id": "left",
+        "section_label": "A",
+        "slice_index": 3,
+        "place": [
+          -24.3,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": -24.3,
+        "edge_inset_mm": 0.0,
+        "status": "free_candidate",
+        "score": 18.4,
+        "support_side": "none",
+        "placement_hint": "center",
+        "occupancy_score": 0.0,
+        "center_px": [
+          515.2,
+          629.0
+        ],
+        "quad_px": [
+          [
+            517,
+            581
+          ],
+          [
+            552,
+            581
+          ],
+          [
+            509,
+            677
+          ],
+          [
+            483,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 6
+      },
+      {
+        "slot_id": "right:2",
+        "section_id": "right",
+        "section_label": "B",
+        "slice_index": 2,
+        "place": [
+          40.5,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": 40.5,
+        "edge_inset_mm": 0.0,
+        "status": "free_candidate",
+        "score": 18.38,
+        "support_side": "none",
+        "placement_hint": "center",
+        "occupancy_score": 0.0,
+        "center_px": [
+          702.0,
+          630.0
+        ],
+        "quad_px": [
+          [
+            688,
+            583
+          ],
+          [
+            714,
+            583
+          ],
+          [
+            716,
+            677
+          ],
+          [
+            690,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 7
+      },
+      {
+        "slot_id": "right:3",
+        "section_id": "right",
+        "section_label": "B",
+        "slice_index": 3,
+        "place": [
+          56.7,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": 56.7,
+        "edge_inset_mm": 0.0,
+        "status": "free_candidate",
+        "score": 17.64,
+        "support_side": "none",
+        "placement_hint": "center",
+        "occupancy_score": 0.0,
+        "center_px": [
+          727.5,
+          630.0
+        ],
+        "quad_px": [
+          [
+            714,
+            583
+          ],
+          [
+            739,
+            583
+          ],
+          [
+            741,
+            677
+          ],
+          [
+            716,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 8
+      },
+      {
+        "slot_id": "left:2",
+        "section_id": "left",
+        "section_label": "A",
+        "slice_index": 2,
+        "place": [
+          -40.5,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": -40.5,
+        "edge_inset_mm": 0.0,
+        "status": "free_candidate",
+        "score": 17.48,
+        "support_side": "none",
+        "placement_hint": "center",
+        "occupancy_score": 0.0,
+        "center_px": [
+          484.8,
+          629.0
+        ],
+        "quad_px": [
+          [
+            481,
+            581
+          ],
+          [
+            517,
+            581
+          ],
+          [
+            483,
+            677
+          ],
+          [
+            458,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 9
+      },
+      {
+        "slot_id": "left:1",
+        "section_id": "left",
+        "section_label": "A",
+        "slice_index": 1,
+        "place": [
+          -56.7,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": -56.7,
+        "edge_inset_mm": 0.0,
+        "status": "free_candidate",
+        "score": 16.55,
+        "support_side": "none",
+        "placement_hint": "center",
+        "occupancy_score": 0.0,
+        "center_px": [
+          454.2,
+          629.0
+        ],
+        "quad_px": [
+          [
+            446,
+            581
+          ],
+          [
+            481,
+            581
+          ],
+          [
+            458,
+            677
+          ],
+          [
+            432,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 10
+      }
+    ]
+  },
+  "home": {
+    "label": "home_straight",
+    "command": "{#000P1500T1500!#001P2000T1500!#002P2000T1500!#003P0850T1500!#004P1500T1500!#005P1500T1500!}",
+    "ok": true,
+    "dry_run": false,
+    "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260515_180123/home_straight_command.txt"
+  },
+  "errors": [],
+  "planned_tasks": [
+    {
+      "title": "墨菲定律",
+      "target_zone": "C_right",
+      "thickness_mm": 18.0,
+      "confidence": 0.9992233514785767,
+      "pick_point": {
+        "x": 320.0,
+        "y": 63.35977694240795,
+        "z": 115.0,
+        "source": "fixed_bin_pick_v1"
+      }
+    },
+    {
+      "title": "羊皮卷",
+      "target_zone": "A_right",
+      "thickness_mm": 7.0,
+      "confidence": 0.9994924068450928,
+      "pick_point": {
+        "x": 320.0,
+        "y": 1.0762404203617915,
+        "z": 115.0,
+        "source": "fixed_bin_pick_v1"
+      }
+    },
+    {
+      "title": "人性的弱点",
+      "target_zone": "B_right",
+      "thickness_mm": 28.0,
+      "confidence": 0.978580117225647,
+      "pick_point": {
+        "x": 320.0,
+        "y": -62.400467299424704,
+        "z": 115.0,
+        "source": "fixed_bin_pick_v1"
+      }
+    }
+  ],
+  "unknown_titles": [],
+  "task_queue": [
+    {
+      "index": 1,
+      "title": "羊皮卷",
+      "confidence": 0.9994924068450928,
+      "pick": [
+        309.5,
+        1.0300735697224372,
+        115.0
+      ],
+      "pick_source": "center_view_lateral_pose_provider",
+      "entity_bbox": [
+        402,
+        11,
+        848,
+        714
+      ],
+      "raw_entity_bbox": [
+        396,
+        0,
+        852,
+        720
+      ],
+      "ocr_bbox": [
+        582,
+        85,
+        627,
+        216
+      ],
+      "tilt_deg": 0.878027499472894,
+      "book_dimensions_mm": {
+        "size_profile": "compact_200x140x8",
+        "spine_height": 200.0,
+        "cover_width": 140.0,
+        "thickness": 8.0,
+        "ocr_visible_height_mm": 33.0
+      },
+      "shelf_candidate": {
+        "slot_id": "right:0",
+        "section_id": "right",
+        "section_label": "B",
+        "slice_index": 0,
+        "place": [
+          20.1,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": 8.1,
+        "edge_inset_mm": 12.0,
+        "status": "free_candidate",
+        "score": 39.84,
+        "support_side": "left_wall",
+        "placement_hint": "lean_left",
+        "occupancy_score": 0.0,
+        "center_px": [
+          651.2,
+          630.0
+        ],
+        "quad_px": [
+          [
+            638,
+            583
+          ],
+          [
+            663,
+            583
+          ],
+          [
+            665,
+            677
+          ],
+          [
+            639,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 1
+      },
+      "place": [
+        20.1,
+        250.0,
+        140.0
+      ],
+      "place_status": "candidate_from_initialized_shelf_world_model",
+      "execution_status": "planned_only_not_sent"
+    },
+    {
+      "index": 2,
+      "title": "人性的弱点",
+      "confidence": 0.978580117225647,
+      "pick": [
+        309.5,
+        -59.391342424005124,
+        115.0
+      ],
+      "pick_source": "center_view_lateral_pose_provider",
+      "entity_bbox": [
+        851,
+        25,
+        1112,
+        718
+      ],
+      "raw_entity_bbox": [
+        848,
+        0,
+        1157,
+        720
+      ],
+      "ocr_bbox": [
+        847,
+        44,
+        894,
+        254
+      ],
+      "tilt_deg": 1.0964360839930283,
+      "book_dimensions_mm": {
+        "size_profile": "compact_200x140x8",
+        "spine_height": 200.0,
+        "cover_width": 140.0,
+        "thickness": 8.0,
+        "ocr_visible_height_mm": 95.0
+      },
+      "shelf_candidate": {
+        "slot_id": "left:4",
+        "section_id": "left",
+        "section_label": "A",
+        "slice_index": 4,
+        "place": [
+          -20.1,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": -8.1,
+        "edge_inset_mm": -12.0,
+        "status": "free_candidate",
+        "score": 39.33,
+        "support_side": "right_wall",
+        "placement_hint": "lean_right",
+        "occupancy_score": 0.0,
+        "center_px": [
+          545.5,
+          629.0
+        ],
+        "quad_px": [
+          [
+            552,
+            581
+          ],
+          [
+            587,
+            581
+          ],
+          [
+            534,
+            677
+          ],
+          [
+            509,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 2
+      },
+      "place": [
+        -20.1,
+        250.0,
+        140.0
+      ],
+      "place_status": "candidate_from_initialized_shelf_world_model",
+      "execution_status": "planned_only_not_sent"
+    },
+    {
+      "index": 3,
+      "title": "墨菲定律",
+      "confidence": 0.9992233514785767,
+      "pick": [
+        309.5,
+        60.35873028357327,
+        115.0
+      ],
+      "pick_source": "center_view_lateral_pose_provider",
+      "entity_bbox": [
+        243,
+        21,
+        358,
+        718
+      ],
+      "raw_entity_bbox": [
+        215,
+        0,
+        360,
+        720
+      ],
+      "ocr_bbox": [
+        321,
+        92,
+        366,
+        312
+      ],
+      "tilt_deg": 0.0,
+      "book_dimensions_mm": {
+        "size_profile": "compact_200x140x8",
+        "spine_height": 200.0,
+        "cover_width": 140.0,
+        "thickness": 8.0,
+        "ocr_visible_height_mm": 95.0
+      },
+      "shelf_candidate": {
+        "slot_id": "right:4",
+        "section_id": "right",
+        "section_label": "B",
+        "slice_index": 4,
+        "place": [
+          60.9,
+          250.0,
+          140.0
+        ],
+        "raw_place_x_mm": 72.9,
+        "edge_inset_mm": -12.0,
+        "status": "free_candidate",
+        "score": 36.91,
+        "support_side": "right_wall",
+        "placement_hint": "lean_right",
+        "occupancy_score": 0.0,
+        "center_px": [
+          752.8,
+          630.0
+        ],
+        "quad_px": [
+          [
+            739,
+            583
+          ],
+          [
+            764,
+            583
+          ],
+          [
+            767,
+            677
+          ],
+          [
+            741,
+            677
+          ]
+        ],
+        "occupied": false,
+        "source": "startup_scan_initialized_shelf",
+        "rank": 3
+      },
+      "place": [
+        60.9,
+        250.0,
+        140.0
+      ],
+      "place_status": "candidate_from_initialized_shelf_world_model",
+      "execution_status": "planned_only_not_sent"
+    }
+  ],
+  "user_report_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260515_180123/startup_scan_report.md"
+}

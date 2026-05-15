@@ -1,0 +1,111 @@
+{
+  "timestamp": "2026-05-10T14:38:45",
+  "status": "partial",
+  "output_dir": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260510_143845",
+  "settle_seconds": 0.0,
+  "dry_run": true,
+  "views": {
+    "left": {
+      "joint0_deg": -90,
+      "pwm": 833,
+      "sections": [
+        "A",
+        "B"
+      ],
+      "description": "-90 deg shelf view: left side=A, right side=B",
+      "motion": {
+        "label": "left_base",
+        "command": "{#000P0833T2500!}",
+        "ok": true,
+        "dry_run": true,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260510_143845/left_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260510_143845/left.png",
+        "ok": true
+      }
+    },
+    "center": {
+      "joint0_deg": 0,
+      "pwm": 1500,
+      "sections": [
+        "bin"
+      ],
+      "description": "0 deg bin view",
+      "motion": {
+        "label": "center_base",
+        "command": "{#000P1500T2500!}",
+        "ok": true,
+        "dry_run": true,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260510_143845/center_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260510_143845/center.png",
+        "ok": true
+      }
+    },
+    "right": {
+      "joint0_deg": 90,
+      "pwm": 2167,
+      "sections": [
+        "C",
+        "D"
+      ],
+      "description": "+90 deg shelf view: left side=C, right side=D",
+      "motion": {
+        "label": "right_base",
+        "command": "{#000P2167T2500!}",
+        "ok": true,
+        "dry_run": true,
+        "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260510_143845/right_base_command.txt"
+      },
+      "capture": {
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260510_143845/right.png",
+        "ok": true
+      }
+    }
+  },
+  "bin": {
+    "source_view": "center",
+    "ok": false,
+    "books": [],
+    "error": "No module named 'paddleocr'"
+  },
+  "shelf_sections": {
+    "status": "pending_or_partial",
+    "note": "Shelf section interpretation is intentionally not forced in v1. The captured shelf images are preserved for the vision/planning handoff.",
+    "sections": {
+      "A": {
+        "view": "left",
+        "side": "left",
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260510_143845/left.png"
+      },
+      "B": {
+        "view": "left",
+        "side": "right",
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260510_143845/left.png"
+      },
+      "C": {
+        "view": "right",
+        "side": "left",
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260510_143845/right.png"
+      },
+      "D": {
+        "view": "right",
+        "side": "right",
+        "image_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260510_143845/right.png"
+      }
+    }
+  },
+  "home": {
+    "label": "home_straight",
+    "command": "{#000P1500T1500!#001P2000T1500!#002P2000T1500!#003P0850T1500!#004P1500T1500!#005P1500T1500!}",
+    "ok": true,
+    "dry_run": true,
+    "command_path": "/Users/xinruixiong/Desktop/ME470/Integrated Algorithm/sim_output/startup_scan/20260510_143845/home_straight_command.txt"
+  },
+  "errors": [
+    "bin detection failed",
+    "shelf section interpretation pending_or_partial"
+  ]
+}

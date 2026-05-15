@@ -20,10 +20,18 @@ DEFAULT_COMMAND_PATH = SIM_OUTPUT_DIR / "hardware_command_sequence.txt"
 DEFAULT_SUMMARY_PATH = SIM_OUTPUT_DIR / "TARGET_SEQUENCE_SUMMARY.md"
 DEFAULT_SEND_SCRIPT = SIM_OUTPUT_DIR / "send_hardware_sequence.py"
 
-PICK_APPROACH_CLEARANCE_MM = 120.0
-POST_GRASP_LIFT_MM = 95.0
-POST_GRASP_RETRACT_MM = 200.0
+PICK_APPROACH_MODE = "low_insert_approach"
+PICK_INSERT_READY_RETRACT_MM = 75.0
+PICK_INSERT_READY_Z_OFFSET_MM = 45.0
+PICK_INSERT_RETRACT_MM = 0.0
+PICK_INSERT_Z_OFFSET_MM = 0.0
+MIN_PICK_INSERT_RADIUS_MM = 110.0
+PICK_APPROACH_CLEARANCE_MM = 50.0
+POST_GRASP_LIFT_MM = 110.0
+POST_GRASP_RETRACT_MM = 230.0
 MIN_POST_GRASP_RADIUS_MM = 110.0
+POST_RELEASE_BACKOFF_MM = 75.0
+POST_RELEASE_BACKOFF_Z_OFFSET_MM = 35.0
 POST_RELEASE_RETREAT_MIN_Z_MM = 240.0
 TRANSPORT_RETRACT_MM = 70.0
 MIN_TRANSPORT_RADIUS_MM = 170.0
@@ -37,8 +45,9 @@ DEFAULT_SMALL_MOVE_TIME_MS = 400
 DEFAULT_MEDIUM_MOVE_TIME_MS = 800
 DEFAULT_NORMAL_MOVE_TIME_MS = 1500
 GRIPPER_CLOSE_COMMAND = "{#005P1700T1000!}"
-GRIPPER_PRE_OPEN_COMMAND = "{#005P1500T1000!}"
-GRIPPER_OPEN_COMMAND = "{#005P1500T1000!}"
+GRIPPER_PRE_OPEN_COMMAND = "{#005P1445T1000!}"
+GRIPPER_RELEASE_OPEN_PWM_DELTA = 75
+GRIPPER_OPEN_COMMAND = f"{{#005P{1700 - GRIPPER_RELEASE_OPEN_PWM_DELTA:04d}T1000!}}"
 PLACEMENT_SUPPORT_MODE = "left_wall"
 LEFT_WALL_WRIST_ROLL_DEG = 15.0
 LEFT_WALL_WRIST_ROLL_TIME_MS = 800
@@ -124,26 +133,37 @@ def build_target_waypoints(
 
     pick_x, pick_y, pick_z = pick
     place_x, place_y, place_z = place
-    approach_z = pick_z + PICK_APPROACH_CLEARANCE_MM
+    ready_x, ready_y = _pick_insert_ready_xy(pick_x, pick_y)
+    ready_z = pick_z + PICK_INSERT_READY_Z_OFFSET_MM
+    approach_x, approach_y = _pick_low_insert_xy(pick_x, pick_y)
+    approach_z = pick_z + PICK_INSERT_Z_OFFSET_MM
     transport_z = pick_z + POST_GRASP_LIFT_MM
     place_retreat_z = max(transport_z, POST_RELEASE_RETREAT_MIN_Z_MM)
     extract_x, extract_y = _post_grasp_extract_xy(pick_x, pick_y)
     retract_x, retract_y = _retract_xy_toward_origin(extract_x, extract_y, TRANSPORT_RETRACT_MM)
+    place_backoff_x, place_backoff_y = _post_release_backoff_xy(place_x, place_y)
+    place_backoff_z = min(place_retreat_z, place_z + POST_RELEASE_BACKOFF_Z_OFFSET_MM)
     waypoints = [
-        TargetWaypoint("pick_approach", pick_x, pick_y, approach_z, False, True, False),
-        TargetWaypoint("pick", pick_x, pick_y, pick_z, False, True, False),
-        TargetWaypoint("gripper_close_pose", pick_x, pick_y, pick_z, True, False, False),
-        TargetWaypoint(
-            "pick_lift",
-            extract_x,
-            extract_y,
-            transport_z,
-            True,
-            False,
-            False,
-            horizontal_end_link=False,
-        ),
+        TargetWaypoint("pick_insert_ready", ready_x, ready_y, ready_z, False, True, False),
     ]
+    if (approach_x, approach_y, approach_z) != (pick_x, pick_y, pick_z):
+        waypoints.append(TargetWaypoint("pick_approach", approach_x, approach_y, approach_z, False, True, False))
+    waypoints.extend(
+        [
+            TargetWaypoint("pick", pick_x, pick_y, pick_z, False, True, False),
+            TargetWaypoint("gripper_close_pose", pick_x, pick_y, pick_z, True, False, False),
+            TargetWaypoint(
+                "pick_lift",
+                extract_x,
+                extract_y,
+                transport_z,
+                True,
+                False,
+                False,
+                horizontal_end_link=False,
+            ),
+        ]
+    )
     if (retract_x, retract_y) != (extract_x, extract_y):
         waypoints.append(TargetWaypoint("transport_retract", retract_x, retract_y, transport_z, True, False, False))
     waypoints.extend(
@@ -161,6 +181,7 @@ def build_target_waypoints(
         TargetWaypoint("place_approach", place_x, place_y, transport_z, True, False, False),
         TargetWaypoint("place_final", place_x, place_y, place_z, True, False, False),
         TargetWaypoint("gripper_open_pose", place_x, place_y, place_z, False, False, True),
+        TargetWaypoint("place_backoff", place_backoff_x, place_backoff_y, place_backoff_z, False, False, True),
         TargetWaypoint("place_retreat", place_x, retreat_y, place_retreat_z, False, False, True),
         ]
     )
@@ -174,6 +195,37 @@ def _post_grasp_extract_xy(x_mm: float, y_mm: float) -> tuple[float, float]:
     target_radius = max(radius - POST_GRASP_RETRACT_MM, MIN_POST_GRASP_RADIUS_MM)
     if target_radius >= radius:
         return x_mm, y_mm
+    scale = target_radius / radius
+    return x_mm * scale, y_mm * scale
+
+
+def _pick_insert_ready_xy(x_mm: float, y_mm: float) -> tuple[float, float]:
+    radius = math.hypot(x_mm, y_mm)
+    if radius <= MIN_PICK_INSERT_RADIUS_MM or PICK_INSERT_READY_RETRACT_MM <= 0.0:
+        return x_mm, y_mm
+    target_radius = max(radius - PICK_INSERT_READY_RETRACT_MM, MIN_PICK_INSERT_RADIUS_MM)
+    if target_radius >= radius:
+        return x_mm, y_mm
+    scale = target_radius / radius
+    return x_mm * scale, y_mm * scale
+
+
+def _pick_low_insert_xy(x_mm: float, y_mm: float) -> tuple[float, float]:
+    radius = math.hypot(x_mm, y_mm)
+    if radius <= MIN_PICK_INSERT_RADIUS_MM or PICK_INSERT_RETRACT_MM <= 0.0:
+        return x_mm, y_mm
+    target_radius = max(radius - PICK_INSERT_RETRACT_MM, MIN_PICK_INSERT_RADIUS_MM)
+    if target_radius >= radius:
+        return x_mm, y_mm
+    scale = target_radius / radius
+    return x_mm * scale, y_mm * scale
+
+
+def _post_release_backoff_xy(x_mm: float, y_mm: float) -> tuple[float, float]:
+    radius = math.hypot(x_mm, y_mm)
+    if radius <= 0.0 or POST_RELEASE_BACKOFF_MM <= 0.0:
+        return x_mm, y_mm
+    target_radius = max(radius - min(POST_RELEASE_BACKOFF_MM, radius), 0.0)
     scale = target_radius / radius
     return x_mm * scale, y_mm * scale
 
@@ -489,10 +541,19 @@ def build_hardware_commands(
     metadata: list[CommandMetadata] = []
     previous_arm_pwm: tuple[int, int, int, int, int] | None = None
 
-    def add_arm_step(label: str) -> None:
+    def add_arm_step(label: str, *, preserve_wrist_roll: bool = False) -> None:
         nonlocal previous_arm_pwm
         waypoint_index = waypoint_index_by_label[label]
         pwm = pwm_by_waypoint[waypoint_index]
+        note = "dynamic arm timing"
+        if preserve_wrist_roll and previous_arm_pwm is not None:
+            pwm = tuple(
+                previous_arm_pwm[WRIST_ROLL_JOINT_INDEX]
+                if joint_index == WRIST_ROLL_JOINT_INDEX
+                else value
+                for joint_index, value in enumerate(pwm)
+            )
+            note = "dynamic arm timing; wrist roll held until arm exits shelf"
         times = _times_for_pwm_delta(pwm, previous_arm_pwm, timing)
         deltas = (
             tuple(0 for _ in pwm)
@@ -508,7 +569,7 @@ def build_hardware_commands(
                 pwm=pwm,
                 deltas=deltas,
                 times_ms=times,
-                note="dynamic arm timing",
+                note=note,
             )
         )
         previous_arm_pwm = pwm
@@ -545,8 +606,10 @@ def build_hardware_commands(
         )
         previous_arm_pwm = tilted_pwm
 
-    add_arm_step("pick_approach")
-    add_gripper_step("gripper_pre_open", GRIPPER_PRE_OPEN_COMMAND, "fixed pre-grasp wide open")
+    add_gripper_step("gripper_pre_open", GRIPPER_PRE_OPEN_COMMAND, "fixed pre-grasp open before pick approach")
+    add_arm_step("pick_insert_ready")
+    if "pick_approach" in waypoint_index_by_label:
+        add_arm_step("pick_approach")
     add_arm_step("pick")
     add_gripper_step("gripper_close", GRIPPER_CLOSE_COMMAND, "fixed gripper close")
     add_arm_step("pick_lift")
@@ -574,8 +637,14 @@ def build_hardware_commands(
     add_arm_step("place_approach")
     add_arm_step("place_final")
     add_left_wall_wrist_roll_step()
-    add_gripper_step("gripper_open", GRIPPER_OPEN_COMMAND, "fixed safe release")
-    add_arm_step("place_retreat")
+    add_gripper_step(
+        "gripper_open",
+        GRIPPER_OPEN_COMMAND,
+        f"fixed narrow release: open {GRIPPER_RELEASE_OPEN_PWM_DELTA} PWM from closed",
+    )
+    hold_release_wrist = PLACEMENT_SUPPORT_MODE == "left_wall"
+    add_arm_step("place_backoff", preserve_wrist_roll=hold_release_wrist)
+    add_arm_step("place_retreat", preserve_wrist_roll=hold_release_wrist)
     commands.append(HARDWARE_HOME_COMMAND)
     metadata.append(
         CommandMetadata(
@@ -592,12 +661,18 @@ def build_fixed_hardware_commands(waypoints, q_waypoints, np_module) -> list[str
     q_deg = [np_module.rad2deg(q).tolist() for q in q_waypoints]
     index_by_label = {waypoint.label: index for index, waypoint in enumerate(waypoints)}
     commands = [
-        arm_command_from_q(q_deg[index_by_label["pick_approach"]]),
         GRIPPER_PRE_OPEN_COMMAND,
-        arm_command_from_q(q_deg[index_by_label["pick"]]),
-        GRIPPER_CLOSE_COMMAND,
-        arm_command_from_q(q_deg[index_by_label["pick_lift"]]),
+        arm_command_from_q(q_deg[index_by_label["pick_insert_ready"]]),
     ]
+    if "pick_approach" in index_by_label:
+        commands.append(arm_command_from_q(q_deg[index_by_label["pick_approach"]]))
+    commands.extend(
+        [
+            arm_command_from_q(q_deg[index_by_label["pick"]]),
+            GRIPPER_CLOSE_COMMAND,
+            arm_command_from_q(q_deg[index_by_label["pick_lift"]]),
+        ]
+    )
     if "transport_retract" in index_by_label:
         commands.append(arm_command_from_q(q_deg[index_by_label["transport_retract"]]))
     commands.extend(
@@ -614,6 +689,7 @@ def build_fixed_hardware_commands(waypoints, q_waypoints, np_module) -> list[str
                 f"T{LEFT_WALL_WRIST_ROLL_TIME_MS:04d}!}}"
             ),
             GRIPPER_OPEN_COMMAND,
+            arm_command_from_q(q_deg[index_by_label["place_backoff"]]),
             arm_command_from_q(q_deg[index_by_label["place_retreat"]]),
             HARDWARE_HOME_COMMAND,
         ]
@@ -662,10 +738,22 @@ def write_summary(
         "",
         f"- pick xyz: `{pick}`",
         f"- place xyz: `{place}`",
-        f"- pick approach clearance: `{PICK_APPROACH_CLEARANCE_MM} mm`",
+        f"- pick approach mode: `{PICK_APPROACH_MODE}`",
+        (
+            "- pick insert ready pose: "
+            f"retract `{PICK_INSERT_READY_RETRACT_MM} mm` toward origin, "
+            f"z offset `{PICK_INSERT_READY_Z_OFFSET_MM} mm`"
+        ),
+        (
+            "- pick low insert approach: "
+            f"retract `{PICK_INSERT_RETRACT_MM} mm` toward origin, "
+            f"minimum radius `{MIN_PICK_INSERT_RADIUS_MM} mm`, "
+            f"z offset `{PICK_INSERT_Z_OFFSET_MM} mm`"
+        ),
         f"- post-grasp extract lift: `{POST_GRASP_LIFT_MM} mm`",
         f"- post-grasp extract toward origin: `{POST_GRASP_RETRACT_MM} mm`, minimum radius `{MIN_POST_GRASP_RADIUS_MM} mm`",
         f"- extra transport retract toward origin: `{TRANSPORT_RETRACT_MM} mm` when radius remains above `{TRANSPORT_RETRACT_TRIGGER_RADIUS_MM} mm`",
+        f"- post-release diagonal backoff: `{POST_RELEASE_BACKOFF_MM} mm` toward origin and `{POST_RELEASE_BACKOFF_Z_OFFSET_MM} mm` upward before retreat",
         f"- post-release retreat minimum z: `{POST_RELEASE_RETREAT_MIN_Z_MM} mm`",
         f"- base-only transfer time: `{BASE_ONLY_TIME_MS} ms`",
         (
@@ -674,7 +762,7 @@ def write_summary(
             f"`delta < {timing.medium_move_threshold_pwm} PWM -> {timing.medium_move_time_ms} ms`, "
             f"otherwise `{timing.normal_move_time_ms} ms`"
         ),
-        f"- gripper pre-open before pick descent: `{GRIPPER_PRE_OPEN_COMMAND}`",
+        f"- gripper pre-open before horizontal insert: `{GRIPPER_PRE_OPEN_COMMAND}`",
         f"- gripper close: `{GRIPPER_CLOSE_COMMAND}`",
         f"- placement support mode: `{PLACEMENT_SUPPORT_MODE}`",
         (
@@ -682,7 +770,10 @@ def write_summary(
             f"servo004 wrist roll left `{LEFT_WALL_WRIST_ROLL_DEG} deg` "
             f"before opening gripper"
         ),
-        f"- gripper open/release: `{GRIPPER_OPEN_COMMAND}`",
+        (
+            f"- gripper open/release: `{GRIPPER_OPEN_COMMAND}` "
+            f"(only `{GRIPPER_RELEASE_OPEN_PWM_DELTA} PWM` from closed)"
+        ),
         f"- final measured home: `{HARDWARE_HOME_COMMAND}`",
         "",
         "| Step | Meaning | Target xyz mm | MuJoCo angles deg `[base, shoulder, elbow, wrist_pitch, wrist_roll]` | Command/action |",
@@ -774,6 +865,23 @@ def send_hardware_sequence(
     if dry_run:
         cmd.append("--dry-run")
     subprocess.run(cmd, cwd=str(ROOT), check=True)
+
+
+def preflight_hardware_sender(port: str, dry_run: bool) -> None:
+    """Check serial dependencies and port discovery before the operator trigger."""
+    if dry_run:
+        return
+    try:
+        import serial  # noqa: F401  # type: ignore
+
+        from hardware_port import resolve_hardware_port
+    except ImportError as exc:
+        raise SystemExit(
+            "pyserial is required for hardware serial output.\n"
+            "Install it with: python3 -m pip install pyserial"
+        ) from exc
+
+    resolve_hardware_port(port)
 
 
 def wait_for_start_trigger(mode: str, dry_run: bool = False) -> None:
